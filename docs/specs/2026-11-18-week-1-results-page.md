@@ -40,6 +40,7 @@ Ten friends (Matt, Julie, Sanna, Anto, Rich, Joe, Jo, Jay, Joel, Lindsay) are do
   - Given no override, each machine's week-8 target is ceil(week-1 total x 1.05) and is labelled "+5% on week 1". For Matt that gives 118 / 209 / 146 = 473.
   - Given an override in `overrides` (for example Julie's Row at 140), that machine shows 140 labelled "set by you", and the overall target is the sum of the machine targets.
   - Given a machine with no target (an incomplete machine with no override), it shows "–" and the overall target is marked incomplete.
+  - Given a person has paces, a second row labelled "At target pace" shows the calories each machine would give if they held the bottom of their Target range for all 13 minutes. That is Row and Ski cal/hr x 13 / 60, and Echo watts x 3 x 13 / 60, rounded to the nearest calorie, plus a total (Matt: Row 272, Ski 190, Echo 153, total 615). The Echo watts-to-calories factor of 3 comes from the calculator's own pattern, not a published formula. The +5% row stays as it is. A person without paces shows only the +5% row.
 - [ ] **Incomplete test:** Given a piece is null, that cell shows "–", the total is marked incomplete, and the insights skip that machine. Balance compares the complete machines only: their shares of the complete machines' total against the group medians rescaled to the same machines (Matt with a Ski piece missing: weak link Echo).
 - [ ] **Programme tab:**
   - The test is explained once.
@@ -54,7 +55,6 @@ Ten friends (Matt, Julie, Sanna, Anto, Rich, Joe, Jo, Jay, Joel, Lindsay) are do
 - **UI:** Open the page in the browser pane at 375x812 (served locally). Check every tab, the `#hash` deep link, an untested tab, the console for errors, and that each person tab fits in about one screenshot. Then repeat at desktop width.
 
 ## Open questions
-- Pace-based week-8 goal: holding Target pace for all 13 minutes would mean +37% to +49% on week 1, which looks too high for a test goal. Keep +5% only, or show it anyway? Waiting on the user.
 - Logging the weekly sessions (what to capture, and the how-it-felt comment) is parked by the user.
 - Joel's and Lindsay's scores are still to come.
 - Phase 2 (self-upload, self-service target overrides) is not yet designed. GitHub Pages is static, so self-upload will need a form or backend service.
