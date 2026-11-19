@@ -199,3 +199,14 @@ test("tab order: everyone alphabetical by name, tested or not", () => {
   assert.deepEqual(C.tabOrder(DATA.people).map((p) => p.name),
     ["Anto", "Jay", "Jo", "Joe", "Julie", "Lindsay", "Matt", "Rich", "Sanna"]);
 });
+
+test("pace goal: calories from holding the bottom of the target range for 13 minutes", () => {
+  const p = clone(person("Matt"));
+  p.paces = { echo: { target: [235, 258], recovery: [146, 168] }, row: { target: [1254, 1373], recovery: [896, 1015] }, ski: { target: [876, 959], recovery: [626, 709] } };
+  const g = C.paceGoals(p);
+  assert.equal(g.row, 272, "1254 cal/hr x 13/60 = 271.7");
+  assert.equal(g.ski, 190, "876 x 13/60 = 189.8");
+  assert.equal(g.echo, 153, "235 W x 3 x 13/60 = 152.75");
+  assert.equal(g.total, 615);
+  assert.equal(C.paceGoals(person("Matt")), null, "no paces, no goal");
+});

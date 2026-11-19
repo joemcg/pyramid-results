@@ -70,6 +70,22 @@
     return people.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
   }
 
+  // Week-8 goal if the person held the bottom of their Target range for all 13 minutes.
+  // Row and Ski paces are cal/hr; Echo is watts, at 3 cal/hr per watt (the calculator's own pattern).
+  var TEST_MINUTES = 13, CALHR_PER_WATT = 3;
+  function paceGoals(person) {
+    if (!person || !person.paces) return null;
+    var out = { total: 0 };
+    MACHINES.forEach(function (m) {
+      var pace = person.paces[m] && person.paces[m].target && person.paces[m].target[0];
+      if (pace == null) { out[m] = null; return; }
+      var calhr = m === "echo" ? pace * CALHR_PER_WATT : pace;
+      out[m] = Math.round(calhr * TEST_MINUTES / 60);
+      out.total += out[m];
+    });
+    return out;
+  }
+
   function testedCount(people, testKey) {
     var n = people.filter(function (p) { return p.tests && p.tests[testKey]; }).length;
     return { tested: n, of: people.length };
@@ -241,7 +257,7 @@
   var api = {
     MACHINES: MACHINES, NAMES: NAMES, MINUTES: MINUTES,
     summarise: summarise, testedCount: testedCount,
-    machineOrder: machineOrder, mixSegments: mixSegments, groupOrder: groupOrder, tabOrder: tabOrder, paceRows: paceRows, kick: kick, shares: shares,
+    machineOrder: machineOrder, mixSegments: mixSegments, groupOrder: groupOrder, tabOrder: tabOrder, paceRows: paceRows, paceGoals: paceGoals, kick: kick, shares: shares,
     groupMedianShares: groupMedianShares, balance: balance, targets: targets,
     improvement: improvement, improvementRanking: improvementRanking,
     programme: programme, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,

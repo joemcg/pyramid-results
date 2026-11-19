@@ -174,7 +174,18 @@
       C.machineOrder(p.raw.tests.week1).map(function (m) {
         var custom = t[m].source === "override";
         return '<div class="' + m + '"><span class="v">' + fig(t[m].value) + '</span><span class="l' + (custom ? " set" : "") + '">' + (custom ? "set by you" : "+" + pct + "% on week 1") + "</span></div>";
-      }).join("") + '<div class="tot"><span class="v">' + t.total + '</span><span class="l">' + (t.complete ? "total" : "total, incomplete") + '</span></div></div></div>';
+      }).join("") + '<div class="tot"><span class="v">' + t.total + '</span><span class="l">' + (t.complete ? "total" : "total, incomplete") + "</span></div></div>" +
+      paceGoalRow(p) + "</div>";
+  }
+
+  // Second targets row: what holding target pace for the whole test would give.
+  function paceGoalRow(p) {
+    var g = C.paceGoals(p.raw);
+    if (!g) return "";
+    return '<div class="tr pg">' + C.machineOrder(p.raw.tests.week1).map(function (m) {
+      return '<div class="' + m + '"><span class="v">' + fig(g[m]) + '</span><span class="l">at target pace</span></div>';
+    }).join("") + '<div class="tot"><span class="v">' + g.total + '</span><span class="l">total</span></div></div>' +
+      '<p class="foot">Top row: 5% up on week 1. Bottom row: holding the bottom of your target pace for all 13 minutes. A stretch goal.</p>';
   }
 
   function pacesBlock(p) {
