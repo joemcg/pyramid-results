@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pyramid week 1 test: Whiteboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Kalam:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --board: #F7F8FA; --frame: #C3C9D2; --ink: #1F2933; --muted: #52606D;
+    --echo: #1D4ED8; --row: #15803D; --ski: #B42318;
+    --page: #E4E8ED; --hand: "Kalam", "Segoe Print", "Bradley Hand", cursive;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 400 16px/1.45 "Atkinson Hyperlegible", system-ui, sans-serif; }
+  main { max-width: 430px; margin: 0 auto; padding: 16px 12px 32px; }
+  h1, h2, h3, p { margin: 0; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .hand { font-family: var(--hand); font-weight: 700; }
+  .echo { color: var(--echo); } .row { color: var(--row); } .ski { color: var(--ski); }
+
+  /* framed board */
+  .board { position: relative; background: var(--board); border: 7px solid var(--frame); border-radius: 12px; padding: 14px 14px 12px; margin-bottom: 18px; }
+  .cap { position: absolute; width: 16px; height: 16px; background: var(--frame); border: 2px solid #AAB2BD; border-radius: 6px; }
+  .cap.tl { top: -9px; left: -9px; } .cap.tr { top: -9px; right: -9px; }
+  .cap.bl { bottom: -9px; left: -9px; } .cap.br { bottom: -9px; right: -9px; }
+
+  header.board { padding-bottom: 14px; }
+  header h1 { font-size: 1.9rem; line-height: 1.1; font-family: var(--hand); font-weight: 700; }
+  header p { color: var(--muted); font-size: 1rem; margin-top: 4px; }
+  header .tested { margin-top: 10px; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+
+  /* summary */
+  h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-weight: 700; font-size: .95rem; text-align: right; padding: 4px 4px 6px; border-bottom: 2px solid var(--ink); }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 5px 4px; text-align: right; border-bottom: 1px solid var(--frame); font-family: var(--hand); font-weight: 700; font-size: 1.3rem; line-height: 1.2; }
+  td:first-child { font-family: "Atkinson Hyperlegible", sans-serif; font-size: 1rem; }
+  td.tot { color: var(--ink); }
+  tr.off td { color: #5B6673; font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 400; font-size: .95rem; background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(195,201,210,.25) 6px 7px); }
+  tr.off td:first-child { font-weight: 400; }
+  .flag { font-family: "Atkinson Hyperlegible", sans-serif; font-size: .75rem; font-weight: 700; color: var(--ski); display: block; }
+  .note { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+
+  /* person card */
+  .who { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+  .who h3 { font-size: 1.1rem; font-weight: 700; }
+  .who .sub { color: var(--muted); font-size: .9rem; }
+  .big { position: relative; display: inline-block; font-family: var(--hand); font-weight: 700; font-size: 3.4rem; line-height: 1.05; padding: 0 4px 10px; }
+  .big small { font-size: 1rem; font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 400; color: var(--muted); margin-left: 4px; }
+  .ul { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 10px; overflow: visible; pointer-events: none; }
+  .ul path { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .grid { display: grid; grid-template-columns: 50px repeat(4, 1fr) 58px; align-items: center; margin-top: 4px; border-top: 2px solid var(--ink); }
+  .grid > * { padding: 3px 2px; text-align: center; min-height: 38px; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed var(--frame); }
+  .grid .h { min-height: 26px; font-size: .8rem; color: var(--muted); border-bottom: 1px solid var(--ink); }
+  .grid .mname { justify-content: flex-start; gap: 4px; font-weight: 700; font-size: .85rem; }
+  .ord { display: inline-grid; place-items: center; width: 17px; height: 17px; border: 1.5px solid currentColor; border-radius: 50%; font-size: .68rem; font-weight: 700; flex: none; }
+  .cell { font-family: var(--hand); font-weight: 700; font-size: 1.35rem; }
+  .mt { position: relative; font-family: var(--hand); font-weight: 700; font-size: 1.4rem; padding-bottom: 8px; }
+  .mt .ul { height: 7px; bottom: 3px; left: 2px; right: 2px; width: calc(100% - 4px); }
+  .mt .ul path { stroke-width: 2; }
+
+  /* insights and targets */
+  .ins { margin-top: 10px; display: grid; gap: 6px; }
+  details { border-top: 1px solid var(--frame); padding-top: 6px; }
+  summary { cursor: pointer; display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: start; list-style: none; padding: 2px 0; }
+  summary::-webkit-details-marker { display: none; }
+  summary .ic { margin-top: 1px; }
+  summary::after { content: none; }
+  details[open] summary { font-weight: 700; }
+  .more { margin: 4px 0 2px 32px; font-size: .92rem; color: var(--muted); }
+  .more ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+  .more b { font-family: var(--hand); font-size: 1.1rem; }
+  .targets { margin-top: 10px; border-top: 2px solid var(--ink); padding-top: 8px; }
+  .targets .head { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .trow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; text-align: center; }
+  .trow div { line-height: 1.15; }
+  .trow .v { font-family: var(--hand); font-weight: 700; font-size: 1.45rem; display: block; }
+  .trow .l { font-size: .72rem; color: var(--muted); display: block; }
+  .trow .l.set { color: var(--ink); font-weight: 700; }
+
+  /* untested */
+  .board.off { background: #EDEFF2; border-color: #D4D9E0; padding: 10px 14px; }
+  .board.off .cap { background: #D4D9E0; border-color: #C3C9D2; }
+  .board.off h3 { font-size: 1rem; }
+  .board.off p { color: #52606D; font-size: .92rem; }
+
+  footer { margin-top: 8px; padding: 12px 4px 0; border-top: 2px solid var(--frame); display: flex; gap: 16px; flex-wrap: wrap; font-size: .95rem; }
+  footer a { color: var(--ink); text-underline-offset: 3px; }
+  footer a[aria-current] { font-weight: 700; text-decoration: none; }
+  @media (prefers-reduced-motion: no-preference) { details .more { animation: fade .18s ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="scores.js"></script>
+<script src="calc.js"></script>
+<script>
+(function () {
+  var C = window.PyramidCalc, D = C.compute(), e = C.esc, ic = C.icon;
+  var strokes = [
+    "M2 6 C30 2 60 8 98 4 S150 7 198 3",
+    "M2 4 C40 8 70 2 110 6 S170 3 198 6",
+    "M2 5 C25 7 55 3 90 6 S160 2 198 5"
+  ];
+  function ul(i) { return '<svg class="ul" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true"><path d="' + strokes[i % 3] + '"/></svg>'; }
+
+  function summaryRow(p) {
+    if (!p.tested) return '<tr class="off"><td>' + e(p.name) + '</td><td colspan="4">Not tested yet</td></tr>';
+    var cells = D.machines.map(function (m) {
+      var t = p.machines[m].total;
+      return '<td class="' + m + '">' + C.fig(t) + '</td>';
+    }).join("");
+    return '<tr><td>' + e(p.name) + '</td>' + cells + '<td class="tot">' + p.total + (p.incomplete ? '<span class="flag">incomplete</span>' : '') + '</td></tr>';
+  }
+
+  function gridRows(p) {
+    var h = '<div class="h"></div>' + C.MINUTES.map(function (m) { return '<div class="h">' + m + ' min</div>'; }).join("") + '<div class="h">Total</div>';
+    var rows = D.machines.map(function (m, i) {
+      var mm = p.machines[m], ord = p.order.indexOf(m) + 1;
+      return '<div class="mname ' + m + '"><span class="ord" title="Done number ' + ord + '" aria-label="Done number ' + ord + '">' + ord + '</span>' + mm.name + '</div>' +
+        mm.pieces.map(function (v) { return '<div class="cell ' + m + '">' + C.fig(v) + '</div>'; }).join("") +
+        '<div class="mt ' + m + '">' + (mm.total == null ? '–' : mm.total) + (mm.total == null ? '' : ul(i + 1)) + '</div>';
+    }).join("");
+    return h + rows;
+  }
+
+  function kickMore(p) {
+    return '<div class="more">Kick compares your 1-min pace with your 4-min pace. Above zero means you finished stronger.<ul>' +
+      D.machines.map(function (m) { var k = p.machines[m].kick; return '<li><span class="' + m + '">' + C.NAMES[m] + '</span> <b>' + (k == null ? '–' : C.signedExact(k)) + '</b></li>'; }).join("") + '</ul></div>';
+  }
+  function balMore(p) {
+    return '<div class="more">Each machine as a share of your total, against the median share across tested people.<ul>' +
+      D.machines.map(function (m) { var mm = p.machines[m]; return '<li><span class="' + m + '">' + C.NAMES[m] + '</span> <b>' + (mm.share == null ? '–' : (mm.share * 100).toFixed(1) + '%') + '</b> vs group ' + (mm.groupShare == null ? '–' : (mm.groupShare * 100).toFixed(1) + '%') + '</li>'; }).join("") + '</ul></div>';
+  }
+  function targets(p) {
+    var cols = D.machines.map(function (m) {
+      var t = p.targets[m];
+      return '<div><span class="v ' + m + '">' + C.fig(t.value) + '</span><span class="l' + (t.custom ? ' set' : '') + '">' + (t.custom ? 'set by you' : t.label) + '</span></div>';
+    }).join("");
+    return '<div class="targets"><div class="head">' + ic('target') + 'Week 8 target</div><div class="trow">' + cols +
+      '<div><span class="v">' + p.targetTotal + '</span><span class="l">total</span></div></div></div>';
+  }
+
+  function card(p) {
+    if (!p.tested) {
+      return '<section class="board off" aria-label="' + e(p.name) + ', not tested yet"><span class="cap tl"></span><span class="cap tr"></span><span class="cap bl"></span><span class="cap br"></span>' +
+        '<h3>' + e(p.name) + '</h3><p>Not tested yet. Send your board photo to add your scores.</p></section>';
+    }
+    return '<section class="board" aria-label="' + e(p.name) + '"><span class="cap tl"></span><span class="cap tr"></span><span class="cap bl"></span><span class="cap br"></span>' +
+      '<div class="who"><div><h3>' + e(p.name) + '</h3><div class="sub">Week 1 test, 12 pieces</div></div>' +
+      '<div class="big">' + p.total + '<small>cal</small>' + ul(0) + '</div></div>' +
+      (p.incomplete ? '<p class="note">Incomplete: some pieces are missing.</p>' : '') +
+      '<div class="grid" role="group" aria-label="Calories by machine and effort">' + gridRows(p) + '</div>' +
+      '<div class="ins">' +
+        '<details><summary>' + ic('kick') + '<span>' + e(p.kickInsight) + '</span></summary>' + kickMore(p) + '</details>' +
+        '<details><summary>' + ic('balance') + '<span>' + e(p.balanceInsight) + '</span></summary>' + balMore(p) + '</details>' +
+      '</div>' + targets(p) + '</section>';
+  }
+
+  var html = '<header class="board"><span class="cap tl"></span><span class="cap tr"></span><span class="cap bl"></span><span class="cap br"></span>' +
+    '<h1>Pyramid</h1><p>Week 1 test. Four, three, two and one minute efforts on each machine, max calories.</p>' +
+    '<div class="tested">' + ic('clock') + D.testedCount + ' of ' + D.count + ' tested</div></header>' +
+    '<section class="board"><span class="cap tl"></span><span class="cap tr"></span><span class="cap bl"></span><span class="cap br"></span>' +
+    '<h2>Everyone so far</h2><table><thead><tr><th scope="col">Name</th>' +
+    D.machines.map(function (m) { return '<th scope="col" class="' + m + '">' + C.NAMES[m] + '</th>'; }).join("") + '<th scope="col">Total</th></tr></thead><tbody>' +
+    D.people.map(summaryRow).join("") + '</tbody></table><p class="note">Calories per machine. Tested people first, no ranking.</p></section>' +
+    D.people.map(card).join("") +
+    '<footer><span>Other options:</span><a href="option-b-console.html">Monitor</a><a href="option-c-pyramid.html">Pyramid</a><a href="option-a-whiteboard.html" aria-current="page">Whiteboard</a></footer>';
+  document.getElementById("app").innerHTML = html;
+})();
+</script>
+</body>
+</html>
