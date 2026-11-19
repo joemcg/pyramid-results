@@ -1,0 +1,71 @@
+// Integrity checks on the live data in data/scores.js. Catches transcription slips from board photos.
+const test = require("node:test");
+const assert = require("node:assert/strict");
+
+require("../data/scores.js");
+const C = require("../src/calc.js");
+const DATA = globalThis.PYRAMID;
+
+test("every tested person's computed total matches their board total", () => {
+  for (const p of DATA.people) {
+    for (const [key, t] of Object.entries(p.tests)) {
+      if (!t || t.boardTotal == null) continue;
+      assert.equal(C.summarise(t).total, t.boardTotal, `${p.name} ${key}`);
+    }
+  }
+});
+
+test("every test has four pieces per machine and a full machine order", () => {
+  for (const p of DATA.people) {
+    for (const [key, t] of Object.entries(p.tests)) {
+      if (!t) continue;
+      assert.deepEqual([...t.order].sort(), [...DATA.machines].sort(), `${p.name} ${key} order`);
+      for (const m of DATA.machines) assert.equal(t.pieces[m].length, 4, `${p.name} ${key} ${m}`);
+    }
+  }
+});
+
+test("Rich's board: Echo 138, Row 144, Ski 123", () => {
+  const s = C.summarise(DATA.people.find((p) => p.name === "Rich").tests.week1);
+  assert.deepEqual([s.machines.echo.total, s.machines.row.total, s.machines.ski.total, s.total], [138, 144, 123, 405]);
+});
+
+test("every person has a week1 and a week8 slot", () => {
+  for (const p of DATA.people) assert.deepEqual(Object.keys(p.tests).sort(), ["week1", "week8"], p.name);
+});
+
+test("spreadsheet of 2026-11-19: machine totals for Jay, Jo and Joe", () => {
+  const expected = { Jay: [152, 159, 151, 462], Jo: [104, 123, 103, 330], Joe: [123, 201, 136, 460] };
+  for (const [name, want] of Object.entries(expected)) {
+    const s = C.summarise(DATA.people.find((p) => p.name === name).tests.week1);
+    assert.deepEqual([s.machines.echo.total, s.machines.row.total, s.machines.ski.total, s.total], want, name);
+  }
+});
+
+test("every copied pace fits the calculator's pattern (catches copying slips)", () => {
+  const band = { target: [1.365, 1.495], recovery: { echo: [0.845, 0.977], row: [0.976, 1.105], ski: [0.976, 1.105] } };
+  let checked = 0;
+  for (const p of DATA.people) {
+    if (!p.paces) continue;
+    const s = C.summarise(p.tests.week1);
+    for (const m of DATA.machines) {
+      const avg = s.machines[m].total / 13 * 60;
+      const toUnit = (calhr) => (m === "echo" ? calhr / 3 : calhr);
+      const want = { target: band.target, recovery: band.recovery[m] };
+      for (const kind of ["target", "recovery"]) {
+        p.paces[m][kind].forEach((v, i) => {
+          const expect = toUnit(avg * want[kind][i]);
+          assert.ok(Math.abs(v - expect) / expect < 0.015, `${p.name} ${m} ${kind}[${i}]: ${v} vs ~${expect.toFixed(0)}`);
+          checked++;
+        });
+      }
+    }
+  }
+  assert.equal(checked, 8 * 3 * 4, "paces present for all 8 tested people");
+});
+
+test("roster is the ten people in the group, Joel included", () => {
+  assert.deepEqual(DATA.people.map((p) => p.name).sort(),
+    ["Anto", "Jay", "Jo", "Joe", "Joel", "Julie", "Lindsay", "Matt", "Rich", "Sanna"]);
+  assert.deepEqual(C.testedCount(DATA.people, "week1"), { tested: 8, of: 10 });
+});

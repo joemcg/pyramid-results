@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pyramid week 1 test: Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --housing: #26292D; --lcd: #C9D4C3; --ink: #17201A; --ink2: #2F3B33; --line: #9FAE98;
+    --echo: #E8A317; --row: #3B82F6; --ski: #10B39B; --on-dark: #E8EDE5; --dim: #AEB6AB;
+    --num: "Chakra Petch", "Eurostile", "Bahnschrift", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--housing); color: var(--on-dark); font: 400 16px/1.45 "IBM Plex Sans", system-ui, sans-serif; }
+  main { max-width: 430px; margin: 0 auto; padding: 16px 12px 32px; }
+  h1, h2, h3, p { margin: 0; }
+  :focus-visible { outline: 3px solid #F4F7F2; outline-offset: 3px; border-radius: 3px; }
+  .lcd :focus-visible { outline-color: var(--ink); }
+  .num { font-family: var(--num); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* LCD panel */
+  .lcd { background: var(--lcd); color: var(--ink); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+         box-shadow: inset 0 2px 3px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.35), 0 0 0 3px #1B1D20; }
+  .lcd.off { background: #3A3F43; color: #AEB6AB; box-shadow: inset 0 2px 3px rgba(0,0,0,.4), 0 0 0 3px #1B1D20; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .85rem; }
+  .chip i { width: 10px; height: 14px; border-radius: 2px; display: inline-block; background: var(--c); }
+  .echo { --c: var(--echo); } .row { --c: var(--row); } .ski { --c: var(--ski); }
+
+  header { padding: 4px 2px 12px; }
+  header h1 { font-family: var(--num); font-weight: 600; font-size: 1.9rem; letter-spacing: .01em; }
+  header p { color: var(--dim); margin-top: 2px; }
+  header .pill { margin-top: 10px; display: inline-flex; gap: 8px; align-items: center; color: var(--on-dark); font-weight: 600; }
+
+  h2 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: right; font-weight: 600; font-size: .85rem; padding: 2px 3px 6px; border-bottom: 1px solid var(--ink); }
+  th:first-child, td:first-child { text-align: left; }
+  td { text-align: right; padding: 5px 3px; border-bottom: 1px solid var(--line); font-family: var(--num); font-weight: 600; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  td:first-child { font-family: "IBM Plex Sans", sans-serif; font-size: 1rem; font-weight: 600; }
+  td.m { box-shadow: inset 0 -3px 0 var(--c); }
+  th .chip { font-size: .85rem; }
+  tr.offrow td { color: #4B574E; font-family: "IBM Plex Sans", sans-serif; font-weight: 400; font-size: .95rem; }
+  .flag { display: block; font: 600 .72rem "IBM Plex Sans", sans-serif; }
+  .foot { margin-top: 8px; font-size: .85rem; color: var(--ink2); }
+
+  /* person */
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .top h3 { font-size: 1.1rem; font-weight: 600; }
+  .top .sub { font-size: .85rem; color: var(--ink2); }
+  .readout { position: relative; font-family: var(--num); font-weight: 600; font-variant-numeric: tabular-nums; font-size: 4rem; line-height: 1; letter-spacing: .04em; padding: 6px 10px; background: #B9C6B2; border-radius: 6px; box-shadow: inset 0 2px 4px rgba(0,0,0,.25); text-align: right; min-width: 180px; padding-left: 34px; }
+  .readout .ghost { position: absolute; inset: 6px 10px; opacity: .1; text-align: right; pointer-events: none; user-select: none; }
+  .readout .val { position: relative; }
+  .readout .unit { position: absolute; left: 8px; top: 4px; font: 600 .7rem "IBM Plex Sans", sans-serif; letter-spacing: 0; }
+  .readout .unit, .readout .val { color: var(--ink); }
+
+  .rows { margin-top: 10px; display: grid; gap: 0; }
+  .r { display: grid; grid-template-columns: 62px repeat(4, 1fr) 46px; align-items: center; border-top: 1px solid var(--line); box-shadow: inset 3px 0 0 var(--c); padding: 5px 0 5px 8px; }
+  .r.hd { box-shadow: none; border-top: 0; font-size: .75rem; color: var(--ink2); padding-top: 0; }
+  .r > span { text-align: center; }
+  .r .nm { text-align: left; font-weight: 600; font-size: .85rem; display: flex; align-items: center; gap: 4px; }
+  .r .p { font-family: var(--num); font-weight: 600; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+  .r .t { font-family: var(--num); font-weight: 600; font-size: 1.2rem; font-variant-numeric: tabular-nums; border-left: 1px solid var(--line); }
+  .seq { display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 3px; font: 600 .68rem var(--num); }
+
+  .ins { margin-top: 8px; }
+  details { border-top: 1px solid var(--line); padding: 6px 0 4px; }
+  summary { list-style: none; display: grid; grid-template-columns: 24px 1fr; gap: 8px; cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+  summary .ic { margin-top: 1px; }
+  details[open] > summary { font-weight: 600; }
+  .more { margin: 6px 0 2px 32px; font-size: .9rem; color: var(--ink2); }
+  .more ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+  .more b { font-family: var(--num); font-weight: 600; }
+  .tg { margin-top: 6px; border-top: 1px solid var(--ink); padding-top: 8px; }
+  .tg .hd2 { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .tr { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+  .tr div { text-align: center; box-shadow: inset 0 -3px 0 var(--c, var(--ink)); padding-bottom: 4px; line-height: 1.15; }
+  .tr .v { display: block; font: 600 1.4rem var(--num); font-variant-numeric: tabular-nums; }
+  .tr .l { display: block; font-size: .72rem; color: var(--ink2); }
+  .tr .l.set { font-weight: 600; color: var(--ink); }
+
+  .lcd.off h3 { font-size: 1rem; font-weight: 600; }
+  .lcd.off p { font-size: .92rem; }
+
+  footer { padding: 10px 4px 0; border-top: 1px solid #44494F; display: flex; gap: 16px; flex-wrap: wrap; font-size: .95rem; color: var(--dim); }
+  footer a { color: var(--on-dark); text-underline-offset: 3px; }
+  footer a[aria-current] { text-decoration: none; font-weight: 600; }
+  @media (prefers-reduced-motion: no-preference) { .readout .val { animation: warm .5s ease-out; } @keyframes warm { from { opacity: .2; } to { opacity: 1; } } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="scores.js"></script>
+<script src="calc.js"></script>
+<script>
+(function () {
+  var C = window.PyramidCalc, D = C.compute(), e = C.esc, ic = C.icon;
+  function chip(m) { return '<span class="chip ' + m + '"><i></i>' + C.NAMES[m] + '</span>'; }
+
+  function summaryRow(p) {
+    if (!p.tested) return '<tr class="offrow"><td>' + e(p.name) + '</td><td colspan="4">Not tested yet</td></tr>';
+    return '<tr><td>' + e(p.name) + '</td>' + D.machines.map(function (m) { return '<td class="m ' + m + '">' + C.fig(p.machines[m].total) + '</td>'; }).join("") +
+      '<td>' + p.total + (p.incomplete ? '<span class="flag">incomplete</span>' : '') + '</td></tr>';
+  }
+  function rows(p) {
+    var h = '<div class="r hd"><span></span>' + C.MINUTES.map(function (m) { return '<span>' + m + ' min</span>'; }).join("") + '<span>Total</span></div>';
+    return h + D.machines.map(function (m) {
+      var mm = p.machines[m], o = p.order.indexOf(m) + 1;
+      return '<div class="r ' + m + '"><span class="nm"><span class="seq" aria-label="Done number ' + o + '">' + o + '</span>' + mm.name + '</span>' +
+        mm.pieces.map(function (v) { return '<span class="p">' + C.fig(v) + '</span>'; }).join("") + '<span class="t">' + C.fig(mm.total) + '</span></div>';
+    }).join("");
+  }
+  function kickMore(p) {
+    return '<div class="more">Kick is your 1-min pace against your 4-min pace. Above zero means you finished stronger.<ul>' +
+      D.machines.map(function (m) { var k = p.machines[m].kick; return '<li>' + chip(m) + ' <b>' + (k == null ? '–' : C.signedExact(k)) + '</b></li>'; }).join("") + '</ul></div>';
+  }
+  function balMore(p) {
+    return '<div class="more">Share of your total against the group median.<ul>' +
+      D.machines.map(function (m) { var mm = p.machines[m]; return '<li>' + chip(m) + ' <b>' + (mm.share == null ? '–' : (mm.share * 100).toFixed(1) + '%') + '</b> vs ' + (mm.groupShare == null ? '–' : (mm.groupShare * 100).toFixed(1) + '%') + '</li>'; }).join("") + '</ul></div>';
+  }
+  function targets(p) {
+    return '<div class="tg"><div class="hd2">' + ic('target') + 'Week 8 target</div><div class="tr">' +
+      D.machines.map(function (m) { var t = p.targets[m]; return '<div class="' + m + '"><span class="v">' + C.fig(t.value) + '</span><span class="l' + (t.custom ? ' set' : '') + '">' + (t.custom ? 'set by you' : t.label) + '</span></div>'; }).join("") +
+      '<div><span class="v">' + p.targetTotal + '</span><span class="l">total</span></div></div></div>';
+  }
+  function card(p) {
+    if (!p.tested) return '<section class="lcd off" aria-label="' + e(p.name) + ', not tested yet"><h3>' + e(p.name) + '</h3><p>Not tested yet. Send your board photo to add your scores.</p></section>';
+    var digits = String(p.total).length, ghost = "888".slice(0, Math.max(3, digits));
+    return '<section class="lcd" aria-label="' + e(p.name) + '"><div class="top"><div><h3>' + e(p.name) + '</h3><div class="sub">Week 1 test' + (p.incomplete ? ', incomplete' : '') + '</div></div>' +
+      '<div class="readout" role="text" aria-label="Total ' + p.total + ' calories"><span class="unit">cal</span><span class="ghost" aria-hidden="true">' + ghost + '</span><span class="val">' + p.total + '</span></div></div>' +
+      '<div class="rows" role="group" aria-label="Calories by machine and effort">' + rows(p) + '</div>' +
+      '<div class="ins"><details><summary>' + ic('kick') + '<span>' + e(p.kickInsight) + '</span></summary>' + kickMore(p) + '</details>' +
+      '<details><summary>' + ic('balance') + '<span>' + e(p.balanceInsight) + '</span></summary>' + balMore(p) + '</details></div>' + targets(p) + '</section>';
+  }
+
+  var html = '<header><h1>Pyramid</h1><p>Week 1 test. Max calories over 4, 3, 2 and 1 minutes on each machine.</p>' +
+    '<div class="pill">' + ic('clock') + D.testedCount + ' of ' + D.count + ' tested</div></header>' +
+    '<section class="lcd"><h2>Everyone so far</h2><table><thead><tr><th scope="col">Name</th>' +
+    D.machines.map(function (m) { return '<th scope="col"><span class="chip ' + m + '" style="justify-content:flex-end"><i></i>' + C.NAMES[m] + '</span></th>'; }).join("") + '<th scope="col">Total</th></tr></thead><tbody>' +
+    D.people.map(summaryRow).join("") + '</tbody></table><p class="foot">Calories. Tested people first, no ranking.</p></section>' +
+    D.people.map(card).join("") +
+    '<footer><span>Other options:</span><a href="option-a-whiteboard.html">Whiteboard</a><a href="option-c-pyramid.html">Pyramid</a><a href="option-b-console.html" aria-current="page">Monitor</a></footer>';
+  document.getElementById("app").innerHTML = html;
+})();
+</script>
+</body>
+</html>
