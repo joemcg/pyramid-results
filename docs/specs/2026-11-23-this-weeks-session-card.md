@@ -11,7 +11,7 @@ The group is starting the cycle sessions (weeks 2 to 7). Mid-session, between ma
 - Week pattern comes from the existing `PROGRAMME` in `src/calc.js`; paces come from each person's `paces` in `data/scores.js`. No new per-person data.
 - The current week is worked out from a programme start date held in the data, so the card moves on without a code change. Week 2 starts Monday 23 November 2026; each later week starts 7 days after the one before (week 7 on 28 December, week 8 on 4 January 2027).
 - Ranges are shown in the units the monitors show: cal/hr for Row and Ski, watts for Echo.
-- Out of scope: a running timer (the gym clock does this), logging session results, editing the session on the page.
+- Out of scope: a running timer (the gym clock does this), editing the session on the page. Logging session results is covered by `2026-11-23-session-results-entry.md`, which adds inputs to these blocks.
 
 ## Acceptance criteria
 - [ ] Given a cycle week (2 to 6) and a person with paces, when their tab opens, then the card shows the week number, a one-line pattern (for week 2: "1:00 target, 1:00 recovery, twice per machine", with sets and rest between sets), and one block per machine giving the target and recovery ranges with units.
