@@ -1,6 +1,6 @@
 # This week's session card on each person's tab
 
-Status: accepted (2026-11-23)
+Status: implemented (2026-11-23)
 
 ## Goal
 The group is starting the cycle sessions (weeks 2 to 7). Mid-session, between machines, people need their own target and recovery paces for the next machine without working anything out. Each tested person's tab gets a "this week's session" card they can glance at on their phone: the week's pattern in one line, then one large block per machine with that person's target and recovery ranges.
@@ -14,10 +14,10 @@ The group is starting the cycle sessions (weeks 2 to 7). Mid-session, between ma
 - Out of scope: a running timer (the gym clock does this), editing the session on the page. Logging session results is covered by `2026-11-23-session-results-entry.md`, which adds inputs to these blocks.
 
 ## Acceptance criteria
-- [ ] Given a cycle week (2 to 6) and a person with paces, when their tab opens, then the card shows the week number, a one-line pattern (for week 2: "1:00 target, 1:00 recovery, twice per machine", with sets and rest between sets), and one block per machine giving the target and recovery ranges with units.
-- [ ] Given Lindsay in week 2, when her tab opens, then the Ski block reads target 806–883 cal/hr and recovery 576–653 cal/hr, Echo 231–253 W and 143–165 W, Row 945–1035 cal/hr and 675–765 cal/hr.
-- [ ] Given week 7, when a tab opens, then each machine block lists the pieces done on that machine (4:00 target, 3:00 target, 1:00 tough minute) with the target range.
-- [ ] Given today's date and the programme start date, when the page loads, then the card shows the week that date falls in: 23 to 29 November 2026 is week 2, 30 November is week 3.
+- [x] Given a cycle week (2 to 6) and a person with paces, when their tab opens, then the card shows the week number, a one-line pattern (for week 2: "1:00 target, 1:00 recovery, twice per machine", with sets and rest between sets), and one block per machine giving the target and recovery ranges with units.
+- [x] Given Lindsay in week 2, when her tab opens, then the Ski block reads target 806–883 cal/hr and recovery 576–653 cal/hr, Echo 231–253 W and 143–165 W, Row 945–1035 cal/hr and 675–765 cal/hr.
+- [x] Given week 7, when a tab opens, then each machine block lists the pieces done on that machine (4:00 target, 3:00 target, 1:00 tough minute) with the target range.
+- [x] Given today's date and the programme start date, when the page loads, then the card shows the week that date falls in: 23 to 29 November 2026 is week 2, 30 November is week 3.
 
 ## Test plan
 - Unit (`test/calc.test.js`): the current-week function for dates before, on, inside and after each week boundary; the per-machine session rows for week 2 and week 7 from a fixture person.

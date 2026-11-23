@@ -1,6 +1,6 @@
 # Session results entry
 
-Status: accepted (2026-11-23)
+Status: implemented (2026-11-23)
 
 ## Goal
 Joe wants every cycle session's results saved in one place so the group's progress can be analysed. Each person enters their own results from their tab, on their phone, straight after (or during) the session: a calorie total for each section and an optional comment. A section is one machine within one set; in week 2 the 4 minutes on the Echo in set 1 is one section. Results go to a Google Sheet Joe owns. Showing results back on the page is not needed.
@@ -21,15 +21,15 @@ Joe wants every cycle session's results saved in one place so the group's progre
 - Out of scope: showing saved results on the page, editing or deleting saved rows from the page, analysis itself.
 
 ## Acceptance criteria
-- [ ] Given Lindsay's tab in week 2, when it opens, then each machine block shows one calories box per set (set 1, set 2) and an optional comment box per section, plus one Save button for the session.
-- [ ] Given she fills in some sections and taps Save, when the save succeeds, then the Sheet gains one row per filled section (empty sections are skipped) and the card says "Saved" with the time.
-- [ ] Given a calories value that is not a whole number from 1 to 999, when she taps Save, then nothing is sent and the box is marked.
-- [ ] Given the save fails (no signal, script error), when she taps Save, then the card says it was not saved, her entries stay on screen, and Save can be tapped again.
-- [ ] Given she reloads the page before saving, when the tab opens again, then her unsaved entries are still there (kept in this phone's storage until a save succeeds).
-- [ ] Given she saves the same section twice, when the Sheet is read, then both rows are present; analysis takes the latest by received time.
-- [ ] Given week 3 or later, when Lindsay taps "Log last week's session instead" under Save, then the card switches to the previous week's blocks, headed with that week and "last week", and Save records rows for that week. Unsaved entries are kept per week.
-- [ ] Given week 8 (card hidden), when Lindsay's tab opens, then the "Log last week's session" link is still shown and opens week 7. In week 2 there is no link (week 1 was the test).
-- [ ] Given the script receives a name not in the roster, a week outside 2 to 7, or a set or machine that week does not have, then it rejects the request and appends nothing.
+- [x] Given Lindsay's tab in week 2, when it opens, then each machine block shows one calories box per set (set 1, set 2) and an optional comment box per section, plus one Save button for the session.
+- [x] Given she fills in some sections and taps Save, when the save succeeds, then the Sheet gains one row per filled section (empty sections are skipped) and the card says "Saved" with the time.
+- [x] Given a calories value that is not a whole number from 1 to 999, when she taps Save, then nothing is sent and the box is marked.
+- [x] Given the save fails (no signal, script error), when she taps Save, then the card says it was not saved, her entries stay on screen, and Save can be tapped again.
+- [x] Given she reloads the page before saving, when the tab opens again, then her unsaved entries are still there (kept in this phone's storage until a save succeeds).
+- [x] Given she saves the same section twice, when the Sheet is read, then both rows are present; analysis takes the latest by received time.
+- [x] Given week 3 or later, when Lindsay taps "Log last week's session instead" under Save, then the card switches to the previous week's blocks, headed with that week and "last week", and Save records rows for that week. Unsaved entries are kept per week.
+- [x] Given week 8 (card hidden), when Lindsay's tab opens, then the "Log last week's session" link is still shown and opens week 7. In week 2 there is no link (week 1 was the test).
+- [x] Given the script receives a name not in the roster, a week outside 2 to 7, or a set or machine that week does not have, then it rejects the request and appends nothing.
 
 ## Test plan
 - Unit (`test/calc.test.js`): `sessionSections(week)` returns 6 sections for weeks 2 to 6 and 9 for week 7; validation of calorie values; building the payload from entries (empty sections dropped).
