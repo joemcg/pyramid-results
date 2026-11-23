@@ -1,6 +1,6 @@
 # Session results entry
 
-Status: implemented (2026-11-23); live once `resultsUrl` is set in `data/scores.js`
+Status: accepted (2026-11-23, revised: collapsible log); live once `resultsUrl` is set in `data/scores.js`
 
 ## Goal
 Joe wants every cycle session's results saved in one place so the group's progress can be analysed. Each person enters their own results from their tab, on their phone, straight after (or during) the session: a calorie total for each section and an optional comment. A section is one machine within one set; in week 2 the 4 minutes on the Echo in set 1 is one section. Results go to a Google Sheet Joe owns. Showing results back on the page is not needed.
@@ -22,6 +22,7 @@ Joe wants every cycle session's results saved in one place so the group's progre
 
 ## Acceptance criteria
 - [x] Given Lindsay's tab in week 2, when it opens, then the three machine blocks show only her ranges, and below them "Log your results" shows, per machine, one calories box per set (set 1, set 2) and an optional comment box per section, plus one Save button for the session.
+- [ ] Given entry is on, when the card opens, then "Log your results" is collapsed and opens on tap. It opens by itself when there are unsaved entries for that week and in the last-week view.
 - [x] Given she fills in some sections and taps Save, when the save succeeds, then the Sheet gains one row per filled section (empty sections are skipped) and the card says "Saved" with the time.
 - [x] Given a section with a comment but no calories ("skipped Ski, cramp"), when she saves, then the Sheet gains a row for it with calories left blank.
 - [x] Given the save gets no reply within 20 seconds, then the card says it was not saved and Save can be tapped again.
