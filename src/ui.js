@@ -211,6 +211,17 @@
 
   // ---------- this week's session ----------
   var nowView = C.sessionWeek(new Date(), D.cycleStart);
+  var SAVE_TIMEOUT_MS = 20000;
+  var onWeekChange = []; // each mounted card re-renders when the phone's date moves into a new week
+  function checkWeek() {
+    var v = C.sessionWeek(new Date(), D.cycleStart);
+    if (v.week === nowView.week && v.upcoming === nowView.upcoming) return;
+    nowView = v;
+    onWeekChange.forEach(function (f) { f(); });
+  }
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checkWeek(); });
+  window.addEventListener("pageshow", checkWeek);
+  window.addEventListener("focus", checkWeek);
   var RESULTS_URL = globalThis.PYRAMID_RESULTS_URL || D.resultsUrl || null;
   function canEnter(view) { return !!RESULTS_URL && !view.upcoming; }
   function lastWeekView(view) { return !view.upcoming && C.session(view.week - 1) ? { week: view.week - 1, upcoming: false, lastWeek: true } : null; }
@@ -219,24 +230,30 @@
     var ses = C.session(view.week), rows = C.paceRows(p.raw);
     if (!ses || !rows || !rows.length) return "";
     function rng(r) { return r[0] + "–" + r[1]; }
-    var entry = canEnter(view);
     var head = view.upcoming ? "Next session: week " + view.week : "Week " + view.week + (view.lastWeek ? ", last week" : "");
     var sub = ses.sets > 1 ? ses.sets + " sets, " + ses.setRest + " rest between" + (ses.machineRest === "none" ? ", no rest between machines" : ", " + ses.machineRest + " rest between machines")
-      : "1 round per machine, " + ses.machineRest;
+      : ses.sections.length + " rounds, " + ses.machineRest;
+    // The blocks hold only what is needed at a glance between machines.
     var blocks = rows.map(function (r) {
-      var rounds = ses.sets === 1 && !entry ? '<ul class="rounds">' + ses.sections.map(function (x) { return "<li>" + esc(x.label) + "</li>"; }).join("") + "</ul>" : "";
-      var inputs = entry ? ses.sections.map(function (x) {
-        var key = x.set + "-" + r.machine, id = "in-" + p.slug + "-" + view.week + "-" + key;
-        return '<div class="en"><label for="' + id + '">' + esc(ses.sets === 1 ? x.label.replace(/, .*$/, "") : x.label) + ", " + x.block + ' total</label>' +
-          '<input id="' + id + '" class="cal" data-key="' + key + '" data-field="calories" inputmode="numeric" autocomplete="off" placeholder="cal">' +
-          '<input class="cm" data-key="' + key + '" data-field="comment" maxlength="280" autocomplete="off" placeholder="Comment (optional)" aria-label="' + esc(x.label) + " comment, " + r.name + '"></div>';
-      }).join("") : "";
+      var pieces = ses.sets === 1 ? '<ul class="rounds">' + ses.sections.map(function (x) { return "<li>" + esc(x.piece || x.label) + "</li>"; }).join("") + "</ul>" : "";
       return '<div class="mb ' + r.machine + '" data-machine="' + r.machine + '" data-week="' + view.week + '"><h3>' + r.name + '</h3>' +
         '<div class="rg"><span class="k">Target</span><span class="v">' + rng(r.target) + '</span><span class="u">' + r.unit + "</span></div>" +
-        '<div class="rg rec"><span class="k">Recovery</span><span class="v">' + rng(r.recovery) + '</span><span class="u">' + r.unit + "</span></div>" + rounds + inputs + "</div>";
+        '<div class="rg rec"><span class="k">Recovery</span><span class="v">' + rng(r.recovery) + '</span><span class="u">' + r.unit + "</span></div>" + pieces + "</div>";
     }).join("");
-    var save = entry ? '<div class="sv"><button type="button" class="save">Save</button><p class="st" role="status" aria-live="polite"></p></div>' : "";
-    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + blocks + save + "</section>";
+    // Entry sits below all three blocks, so it never pushes the next machine's ranges off screen.
+    var log = "";
+    if (canEnter(view)) {
+      log = '<div class="log"><h3>Log your results</h3>' + rows.map(function (r) {
+        return '<div class="lg ' + r.machine + '"><h4>' + r.name + "</h4>" + ses.sections.map(function (x) {
+          var key = x.set + "-" + r.machine, id = "in-" + p.slug + "-" + view.week + "-" + key;
+          var name = ses.sets === 1 ? x.label.replace(/, .*$/, "") : x.label;
+          return '<div class="en"><label for="' + id + '">' + esc(name) + ", " + x.block + ' total</label>' +
+            '<input id="' + id + '" class="cal" data-key="' + key + '" data-field="calories" inputmode="numeric" autocomplete="off" placeholder="cal">' +
+            '<input class="cm" data-key="' + key + '" data-field="comment" maxlength="280" autocomplete="off" placeholder="Comment (optional)" aria-label="' + esc(name) + " comment, " + r.name + '"></div>';
+        }).join("") + "</div>";
+      }).join("") + '<div class="sv"><button type="button" class="save">Save</button><p class="st" role="status" aria-live="polite"></p></div></div>';
+    }
+    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + blocks + log + "</section>";
   }
 
   // Browser storage is a convenience: every call may throw (private browsing) and the card still works.
@@ -248,8 +265,9 @@
 
   // Renders and wires one person's session box; view switches between this week and last week.
   function mountSession(p, box) {
-    var lw = RESULTS_URL ? lastWeekView(nowView) : null;
+    var lw = null;
     function render(view) {
+      lw = RESULTS_URL ? lastWeekView(nowView) : null;
       var card = sessionBlock(p, view);
       var link = "";
       if (lw && !view.lastWeek) link = '<button type="button" class="lnk" data-go="last">Log last week\'s session instead</button>';
@@ -291,18 +309,26 @@
         if (!pay.body.rows.length) { st.textContent = "Nothing to save yet. Enter calories for at least one section."; return; }
         busy = true; btn.disabled = true; st.textContent = "Saving…";
         var sent = JSON.stringify(e);
-        fetch(RESULTS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(pay.body) })
-          .then(function (r) { return r.json(); })
+        var ctl = typeof AbortController === "function" ? new AbortController() : null;
+        var timer = setTimeout(function () { if (ctl) ctl.abort(); }, SAVE_TIMEOUT_MS);
+        fetch(RESULTS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(pay.body), signal: ctl ? ctl.signal : undefined })
+          .then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); })
           .then(function (res) {
+            clearTimeout(timer);
+            if (res && res.ok === false && typeof res.error === "string") {
+              busy = false; st.textContent = "Not saved: " + res.error + ". Tell Joe if this keeps happening."; btn.disabled = false;
+              return;
+            }
             if (!res || res.ok !== true) throw new Error("not saved");
             memSaved = { time: hhmm(new Date()), entries: sent };
             store(savedKey, memSaved);
             busy = false; refresh();
           })
-          .catch(function () { busy = false; st.textContent = "Not saved. Check your signal and try again."; btn.disabled = false; });
+          .catch(function () { clearTimeout(timer); busy = false; st.textContent = "Not saved. Check your signal and try again."; btn.disabled = false; });
       });
       refresh();
     }
+    onWeekChange.push(function () { render(nowView); });
     render(nowView);
   }
 
