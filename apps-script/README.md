@@ -11,6 +11,18 @@ Saves what people enter on their session card to a Google Sheet. One row per sec
 
 The script creates the "Results" tab and its header row on the first save.
 
+## Smoke check after deploying
+The local stub (`scripts/results-stub.js`) does not copy Google's redirect, so check the real URL once.
+
+1. Send a deliberately bad save (unknown name), which must not write anything:
+
+   ```bash
+   curl -sL -H 'Content-Type: text/plain' --data '{"name":"Nobody","week":2,"rows":[]}' "<web app URL>"
+   ```
+
+   Expect `{"ok":false,"error":"unknown name"}`. An HTML page instead means the access setting is not "Anyone".
+2. On a phone, open your own tab on the live page, enter one section and tap Save. Expect "Saved" with the time, and one new row in the Results tab. Delete that row afterwards if it was only a test.
+
 ## After changing the script
 Deploy > Manage deployments > edit the existing deployment > Version: New version. This keeps the same URL.
 

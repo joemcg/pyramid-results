@@ -8,8 +8,20 @@ const S = require("../apps-script/Code.js");
 const DATA = globalThis.PYRAMID;
 const NOW = new Date("2026-11-23T18:42:00Z");
 
+// Mimics the two Sheet calls the script uses; counts writes so a save is one write.
 function fakeSheet(rows = []) {
-  return { rows, getLastRow() { return this.rows.length; }, appendRow(r) { this.rows.push(r); } };
+  return {
+    rows, writes: 0,
+    getLastRow() { return this.rows.length; },
+    getRange(row, col, n, m) {
+      const sheet = this;
+      return { setValues(vals) {
+        assert.equal(row, sheet.rows.length + 1, "writes start on the next empty row");
+        assert.equal(col, 1); assert.equal(vals.length, n); vals.forEach((v) => assert.equal(v.length, m));
+        sheet.writes++; sheet.rows.push(...vals);
+      } };
+    },
+  };
 }
 const row = (over = {}) => ({ set: 1, machine: "ski", calories: 51, comment: "", ...over });
 
@@ -17,9 +29,10 @@ test("a good save writes the header once, then one row per section", () => {
   const sheet = fakeSheet();
   const res = S.handleSave({ name: "Lindsay", week: 2, rows: [row(), row({ set: 2, machine: "echo", calories: 44, comment: "legs gone" })] }, sheet, NOW);
   assert.deepEqual(res, { ok: true });
-  assert.deepEqual(sheet.rows, [S.HEADER, [NOW, "Lindsay", 2, 1, "ski", 51, ""], [NOW, "Lindsay", 2, 2, "echo", 44, "legs gone"]]);
+  assert.deepEqual(sheet.rows, [S.HEADER, [NOW, "Lindsay", 2, 1, "ski", 51, ""], [NOW, "Lindsay", 2, 2, "echo", 44, "'legs gone"]]);
+  assert.equal(sheet.writes, 1, "header and rows in one write");
   S.handleSave({ name: "Lindsay", week: 2, rows: [row()] }, sheet, NOW);
-  assert.equal(sheet.rows.filter((r) => r === S.HEADER).length, 1, "header written once");
+  assert.equal(sheet.rows.filter((r) => r[0] === "received").length, 1, "header written once");
   assert.equal(sheet.rows.length, 4, "saving the same section again adds another row");
 });
 
@@ -41,6 +54,10 @@ test("any invalid part rejects the whole save and appends nothing", () => {
     { name: "Lindsay", week: 2, rows: [row({ calories: 45.5 })] },
     { name: "Lindsay", week: 2, rows: [] },
     { name: "Lindsay", week: 2, rows: [row(), row({ machine: "row" }), row({ machine: "bike" })] },
+    { name: "Lindsay", week: "2", rows: [row()] },
+    { name: "Lindsay", week: 2, rows: [row(), row()] },
+    { name: "Lindsay", week: 2, rows: Array.from({ length: 7 }, (_, i) => row({ set: (i % 2) + 1, machine: ["echo", "row", "ski", "echo", "row", "ski", "ski"][i] })) },
+    { name: "Lindsay", week: 2, rows: [row({ calories: null, comment: "" })] },
   ];
   for (const body of bad) {
     const sheet = fakeSheet();
@@ -51,11 +68,19 @@ test("any invalid part rejects the whole save and appends nothing", () => {
   }
 });
 
-test("comments are kept as text and cut to 280 characters", () => {
+test("comments are kept as text, never formulas, numbers, times or dates, and cut to 280 characters", () => {
   const sheet = fakeSheet();
-  S.handleSave({ name: "Lindsay", week: 2, rows: [row({ comment: "=SUM(A1)" }), row({ machine: "row", comment: "y".repeat(300) })] }, sheet, NOW);
-  assert.equal(sheet.rows[1][6], "'=SUM(A1)");
-  assert.equal(sheet.rows[2][6].length, 280);
+  const comments = ["=SUM(A1)", "3:00", "45", "1/2", "y".repeat(300)];
+  const rows = comments.map((c, i) => row({ set: (i % 2) + 1, machine: ["echo", "row", "ski", "echo", "row"][i], comment: c }));
+  assert.deepEqual(S.handleSave({ name: "Lindsay", week: 2, rows }, sheet, NOW), { ok: true });
+  assert.deepEqual(sheet.rows.slice(1, 5).map((r) => r[6]), ["'=SUM(A1)", "'3:00", "'45", "'1/2"]);
+  assert.equal(sheet.rows[5][6], "'" + "y".repeat(280));
+});
+
+test("a comment alone saves with calories left blank", () => {
+  const sheet = fakeSheet();
+  assert.deepEqual(S.handleSave({ name: "Lindsay", week: 2, rows: [row({ calories: null, comment: "skipped Ski, cramp" })] }, sheet, NOW), { ok: true });
+  assert.deepEqual(sheet.rows[1], [NOW, "Lindsay", 2, 1, "ski", "", "'skipped Ski, cramp"]);
 });
 
 test("the script's roster and sections match the page data", () => {
