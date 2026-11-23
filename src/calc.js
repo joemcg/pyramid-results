@@ -224,6 +224,29 @@
       sections: s.sections.map(function (x) { return { set: x.set, label: x.label, block: x.block }; }) };
   }
 
+
+  // Session results entry. Calories: whole number 1 to 999 for the whole block; blank means not entered.
+  var COMMENT_MAX = 280;
+  function parseCalories(text) {
+    var t = String(text == null ? "" : text).trim();
+    if (t === "") return { ok: true, value: null };
+    if (!/^\d+$/.test(t)) return { ok: false };
+    var v = parseInt(t, 10);
+    return v >= 1 && v <= 999 ? { ok: true, value: v } : { ok: false };
+  }
+  // entries: { "<set>-<machine>": { calories, comment } }. Blank sections are dropped; any bad value rejects all.
+  function buildPayload(name, week, entries) {
+    var rows = [], bad = [];
+    Object.keys(entries).forEach(function (key) {
+      var e = entries[key] || {}, c = parseCalories(e.calories);
+      if (!c.ok) { bad.push(key); return; }
+      if (c.value == null) return;
+      var parts = key.split("-");
+      rows.push({ set: Number(parts[0]), machine: parts[1], calories: c.value, comment: String(e.comment || "").trim().slice(0, COMMENT_MAX) });
+    });
+    return bad.length ? { ok: false, bad: bad } : { ok: true, body: { name: name, week: week, rows: rows } };
+  }
+
   function programme() { return PROGRAMME; }
   // Longest week in minutes, so the programme chart scales to fit.
   function programmeScaleMax(rows) {
@@ -280,7 +303,7 @@
     machineOrder: machineOrder, mixSegments: mixSegments, groupOrder: groupOrder, tabOrder: tabOrder, paceRows: paceRows, paceGoals: paceGoals, kick: kick, shares: shares,
     groupMedianShares: groupMedianShares, balance: balance, targets: targets,
     improvement: improvement, improvementRanking: improvementRanking,
-    programme: programme, sessionWeek: sessionWeek, session: session, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,
+    programme: programme, sessionWeek: sessionWeek, session: session, parseCalories: parseCalories, buildPayload: buildPayload, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,
     pctWhole: pctWhole, signed: signed, signedExact: signedExact,
     kickInsight: kickInsight, balanceInsight: balanceInsight
   };

@@ -232,3 +232,24 @@ test("session gives the sections per machine for cycle weeks only", () => {
   assert.equal(C.session(1), null);
   assert.equal(C.session(8), null);
 });
+
+test("parseCalories accepts whole numbers 1 to 999 and treats blank as no entry", () => {
+  assert.deepEqual(C.parseCalories(" 45 "), { ok: true, value: 45 });
+  assert.deepEqual(C.parseCalories("045"), { ok: true, value: 45 });
+  assert.deepEqual(C.parseCalories("999"), { ok: true, value: 999 });
+  assert.deepEqual(C.parseCalories(""), { ok: true, value: null });
+  assert.deepEqual(C.parseCalories("   "), { ok: true, value: null });
+  for (const bad of ["0", "1000", "45.5", "4e1", "-3", "abc", "+5"]) assert.equal(C.parseCalories(bad).ok, false, bad);
+});
+
+test("buildPayload keeps filled sections, trims and caps comments, and rejects any bad value", () => {
+  const good = C.buildPayload("Lindsay", 2, {
+    "1-ski": { calories: "51", comment: " felt good " },
+    "2-ski": { calories: "", comment: "" },
+    "2-row": { calories: "", comment: "comment without calories" },
+  });
+  assert.deepEqual(good, { ok: true, body: { name: "Lindsay", week: 2, rows: [{ set: 1, machine: "ski", calories: 51, comment: "felt good" }] } });
+  const long = C.buildPayload("Lindsay", 2, { "1-echo": { calories: "44", comment: "x".repeat(300) } });
+  assert.equal(long.body.rows[0].comment.length, 280);
+  assert.deepEqual(C.buildPayload("Lindsay", 2, { "1-echo": { calories: "44.5", comment: "" }, "1-row": { calories: "60", comment: "" } }), { ok: false, bad: ["1-echo"] });
+});
