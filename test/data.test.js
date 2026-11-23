@@ -61,7 +61,7 @@ test("every copied pace fits the calculator's pattern (catches copying slips)", 
       }
     }
   }
-  assert.equal(checked, 8 * 3 * 4, "paces present for all 8 tested people");
+  assert.equal(checked, 9 * 3 * 4, "paces present for all 9 tested people");
 });
 
 test("Lindsay's week 1 (2026-11-23): Echo 110, Row 150, Ski 128, started on the Ski", () => {
