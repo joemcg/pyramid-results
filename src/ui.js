@@ -208,6 +208,25 @@
     return '<div class="tg"><div class="hd2">' + icon("clock") + 'Week 8 retest</div><div class="w8 hd"><span></span><span>Week 1</span><span>Week 8</span><span>Change</span></div>' + rows + '<div class="scope">' + slopeChart(p) + "</div></div>";
   }
 
+
+  // ---------- this week's session ----------
+  var nowView = C.sessionWeek(new Date(), D.cycleStart);
+  function sessionBlock(p, view) {
+    var ses = C.session(view.week), rows = C.paceRows(p.raw);
+    if (!ses || !rows || !rows.length) return "";
+    function rng(r) { return r[0] + "–" + r[1]; }
+    var head = view.upcoming ? "Next session: week " + view.week : "Week " + view.week + (view.lastWeek ? ", last week" : "");
+    var sub = ses.sets > 1 ? ses.sets + " sets, " + ses.setRest + " rest between" + (ses.machineRest === "none" ? ", no rest between machines" : ", " + ses.machineRest + " rest between machines")
+      : "1 round per machine, " + ses.machineRest;
+    var blocks = rows.map(function (r) {
+      var rounds = ses.sets === 1 ? '<ul class="rounds">' + ses.sections.map(function (x) { return "<li>" + esc(x.label) + "</li>"; }).join("") + "</ul>" : "";
+      return '<div class="mb ' + r.machine + '" data-machine="' + r.machine + '" data-week="' + view.week + '"><h3>' + r.name + '</h3>' +
+        '<div class="rg"><span class="k">Target</span><span class="v">' + rng(r.target) + '</span><span class="u">' + r.unit + "</span></div>" +
+        '<div class="rg rec"><span class="k">Recovery</span><span class="v">' + rng(r.recovery) + '</span><span class="u">' + r.unit + "</span></div>" + rounds + "</div>";
+    }).join("");
+    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + blocks + "</section>";
+  }
+
   function personPanel(p) {
     if (!p.tested) {
       return '<section class="lcd off"><h2>' + esc(p.name) + "</h2><p>Not tested yet. Send your board photo to add your scores.</p></section>";
@@ -215,7 +234,7 @@
     var s = p.s1, k = C.kick(p.raw.tests.week1), bal = C.balance(p.raw.tests.week1, medians);
     var ki = C.kickInsight(k), bi = C.balanceInsight(bal, medians);
     var digits = String(s.total).length, ghost = "888".slice(0, Math.max(3, digits));
-    return '<section class="lcd"><div class="top"><div><h2>' + esc(p.name) + '</h2><div class="sub">Week 1 test' + (s.complete ? "" : ", incomplete") + "</div></div>" +
+    return sessionBlock(p, nowView) + '<section class="lcd"><div class="top"><div><h2>' + esc(p.name) + '</h2><div class="sub">Week 1 test' + (s.complete ? "" : ", incomplete") + "</div></div>" +
       '<div class="readout" role="img" aria-label="Total ' + s.total + " calories" + (s.complete ? "" : ", incomplete") + '"><span class="unit">cal</span><span class="ghost" aria-hidden="true">' + ghost + '</span><span class="val">' + s.total + "</span></div></div>" +
       '<div class="rows" role="group" aria-label="Calories by machine and effort">' + pieceRows(s) + "</div>" +
       '<div class="scope">' + paceChart(s) + "</div>" +
