@@ -64,8 +64,15 @@ test("every copied pace fits the calculator's pattern (catches copying slips)", 
   assert.equal(checked, 8 * 3 * 4, "paces present for all 8 tested people");
 });
 
+test("Lindsay's week 1 (2026-11-23): Echo 110, Row 150, Ski 128, started on the Ski", () => {
+  const t = DATA.people.find((p) => p.name === "Lindsay").tests.week1;
+  const s = C.summarise(t);
+  assert.deepEqual([s.machines.echo.total, s.machines.row.total, s.machines.ski.total, s.total], [110, 150, 128, 388]);
+  assert.equal(t.order[0], "ski");
+});
+
 test("roster is the ten people in the group, Joel included", () => {
   assert.deepEqual(DATA.people.map((p) => p.name).sort(),
     ["Anto", "Jay", "Jo", "Joe", "Joel", "Julie", "Lindsay", "Matt", "Rich", "Sanna"]);
-  assert.deepEqual(C.testedCount(DATA.people, "week1"), { tested: 8, of: 10 });
+  assert.deepEqual(C.testedCount(DATA.people, "week1"), { tested: 9, of: 10 });
 });
