@@ -3,10 +3,13 @@
 // Each person has a week1 and a week8 slot; null until that test is done.
 // order: the machine order the person did the test in.
 // paces: Target and Recovery ranges from the official pace calculator. Echo in watts, Row and Ski in cal/hr.
+// cycleStart: the date week 2 starts; later weeks start every 7 days.
 // overrides: per-person week-8 targets that replace the +5% default, e.g. { Julie: { week8: { row: 140 } } }.
 globalThis.PYRAMID = {
   machines: ["echo", "row", "ski"],
   flatUplift: 0.05,
+  cycleStart: "2026-11-23", // Monday week 2 (the first cycle session) starts
+  resultsUrl: null,         // Apps Script web app URL for saving session results; entry hidden while null
   people: [
     { name: "Matt",  tests: { week1: { date: null, order: ["row", "ski", "echo"], boardTotal: 450, pieces: { echo: [48, 32, 21, 11], row: [80, 58, 40, 21], ski: [57, 42, 26, 14] } }, week8: null }, paces: { echo: { target: [235, 258], recovery: [146, 168] }, row: { target: [1254, 1373], recovery: [896, 1015] }, ski: { target: [876, 959], recovery: [626, 709] } } },
     { name: "Julie", tests: { week1: { date: null, order: ["row", "ski", "echo"], boardTotal: 307, pieces: { echo: [32, 22, 15, 7],  row: [52, 38, 24, 12], ski: [42, 32, 21, 10] } }, week8: null }, paces: { echo: { target: [160, 175], recovery: [99, 114] }, row: { target: [794, 869], recovery: [567, 643] }, ski: { target: [662, 725], recovery: [473, 536] } } },

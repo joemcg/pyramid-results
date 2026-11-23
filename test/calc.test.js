@@ -210,3 +210,25 @@ test("pace goal: calories from holding the bottom of the target range for 13 min
   assert.equal(g.total, 615);
   assert.equal(C.paceGoals(person("Matt")), null, "no paces, no goal");
 });
+
+test("sessionWeek follows the phone's local date from the 23 Nov 2026 start", () => {
+  const S = "2026-11-23";
+  assert.deepEqual(C.sessionWeek(new Date(2026, 10, 22, 23, 59), S), { week: 2, upcoming: true });
+  assert.deepEqual(C.sessionWeek(new Date(2026, 10, 23, 0, 1), S), { week: 2, upcoming: false });
+  assert.equal(C.sessionWeek(new Date(2026, 10, 29, 23, 59), S).week, 2);
+  assert.equal(C.sessionWeek(new Date(2026, 10, 30, 0, 0), S).week, 3);
+  assert.equal(C.sessionWeek(new Date(2026, 11, 28), S).week, 7);
+  assert.equal(C.sessionWeek(new Date(2027, 0, 4), S).week, 8);
+});
+
+test("session gives the sections per machine for cycle weeks only", () => {
+  const w2 = C.session(2);
+  assert.equal(w2.sets, 2);
+  assert.equal(w2.pattern, "1:00 target, 1:00 recovery, twice");
+  assert.deepEqual(w2.sections.map((s) => [s.set, s.label, s.block]), [[1, "Set 1", "4:00"], [2, "Set 2", "4:00"]]);
+  assert.deepEqual(C.session(4).sections.map((s) => s.block), ["5:00", "5:00"]);
+  const w7 = C.session(7);
+  assert.deepEqual(w7.sections.map((s) => [s.set, s.label, s.block]), [[1, "Round 1, 4:00", "4:30"], [2, "Round 2, 3:00", "3:30"], [3, "Tough minute", "1:00"]]);
+  assert.equal(C.session(1), null);
+  assert.equal(C.session(8), null);
+});

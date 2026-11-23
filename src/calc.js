@@ -174,27 +174,27 @@
       structure: "The test: 4, 3, 2 and 1 minute max-calorie efforts on Echo, Row and Ski in turn.",
       purpose: "Set your baseline. Your score is total calories.",
       details: ["Do 4, 3, 2 and 1 minute efforts for as many calories as you can on one machine.", "Rest 1 minute after each round, then move to the next machine.", "The clock runs for 33 minutes in all.", "Score: total calories across all 12 efforts."] },
-    { week: 2, kind: "cycle", target: 12, recovery: 12, rest: 12,
+    { week: 2, kind: "cycle", session: { sets: 2, pattern: "1:00 target, 1:00 recovery, twice", machineRest: "1:00", setRest: "4:00", sections: [{ set: 1, label: "Set 1", block: "4:00" }, { set: 2, label: "Set 2", block: "4:00" }] }, target: 12, recovery: 12, rest: 12,
       structure: "2 sets. On each machine: 1 min target pace, 1 min recovery pace, twice.",
       purpose: "Learn your paces and keep moving during recovery.",
       details: ["On each machine: 1 min target pace, 1 min recovery pace, 1 min target pace, 1 min recovery pace.", "1 min rest between machines.", "4 min rest after each set, then repeat."] },
-    { week: 3, kind: "cycle", target: 15, recovery: 12, rest: 12,
+    { week: 3, kind: "cycle", session: { sets: 2, pattern: "1:30 target, 1:00 recovery, 1:00 target, 1:00 recovery", machineRest: "1:00", setRest: "4:00", sections: [{ set: 1, label: "Set 1", block: "4:30" }, { set: 2, label: "Set 2", block: "4:30" }] }, target: 15, recovery: 12, rest: 12,
       structure: "As week 2, but the first target piece on each machine is 1:30.",
       purpose: "More time above target pace.",
       details: ["On each machine: 1:30 target, 1 min recovery, 1 min target, 1 min recovery.", "1 min rest between machines.", "4 min rest after each set, 2 sets in all."] },
-    { week: 4, kind: "cycle", target: 18, recovery: 12, rest: 12,
+    { week: 4, kind: "cycle", session: { sets: 2, pattern: "1:30 target, 1:00 recovery, twice", machineRest: "1:00", setRest: "4:00", sections: [{ set: 1, label: "Set 1", block: "5:00" }, { set: 2, label: "Set 2", block: "5:00" }] }, target: 18, recovery: 12, rest: 12,
       structure: "Both target pieces on each machine are 1:30.",
       purpose: "More time above target pace again.",
       details: ["On each machine: 1:30 target, 1 min recovery, 1:30 target, 1 min recovery.", "1 min rest between machines.", "4 min rest after each set, 2 sets in all."] },
-    { week: 5, kind: "cycle", target: 15, recovery: 9, rest: 10,
+    { week: 5, kind: "cycle", session: { sets: 2, pattern: "1:30 target, 1:00 recovery, 1:00 target, 0:30 recovery", machineRest: "none", setRest: "5:00", sections: [{ set: 1, label: "Set 1", block: "4:00" }, { set: 2, label: "Set 2", block: "4:00" }] }, target: 15, recovery: 9, rest: 10,
       structure: "2 sets with no rest between machines: 1:30 target, 1 min recovery, 1 min target, 30s recovery.",
       purpose: "Practise transitions and getting back to working pace fast.",
       details: ["Go straight from one machine to the next with no rest.", "On each machine: 1:30 target, 1 min recovery, 1 min target, 30s recovery.", "5 min rest after each set, 2 sets in all."] },
-    { week: 6, kind: "cycle", target: 18, recovery: 6, rest: 10,
+    { week: 6, kind: "cycle", session: { sets: 2, pattern: "2:00 target, 0:30 recovery, 1:00 target, 0:30 recovery", machineRest: "none", setRest: "5:00", sections: [{ set: 1, label: "Set 1", block: "4:00" }, { set: 2, label: "Set 2", block: "4:00" }] }, target: 18, recovery: 6, rest: 10,
       structure: "On each machine: 2 min target, 30s recovery, 1 min target, 30s recovery.",
       purpose: "Less recovery and more sustained work.",
       details: ["Go straight from one machine to the next with no rest.", "On each machine: 2 min target, 30s recovery, 1 min target, 30s recovery.", "5 min rest after each set, 2 sets in all."] },
-    { week: 7, kind: "cycle", target: 24, recovery: 3, rest: 2,
+    { week: 7, kind: "cycle", session: { sets: 1, pattern: "4:00 target + 0:30 recovery, then 3:00 target + 0:30 recovery, then 1 tough minute", machineRest: "1:00 after each round", setRest: "none", sections: [{ set: 1, label: "Round 1, 4:00", block: "4:30" }, { set: 2, label: "Round 2, 3:00", block: "3:30" }, { set: 3, label: "Tough minute", block: "1:00" }] }, target: 24, recovery: 3, rest: 2,
       structure: "1 set: 4 min then 3 min target pieces on each machine, then 1 tough minute on each.",
       purpose: "The last hard push before the retest, ending with a burnout like the end of the test.",
       details: ["4 min target plus 30s recovery on each machine, then 1 min rest.", "3 min target plus 30s recovery on each machine, then 1 min rest.", "Finish with 1 tough minute on each machine. The 3 tough minutes count as target time."] },
@@ -203,6 +203,26 @@
       purpose: "Compare with your week 1.",
       details: ["Same format as week 1: 4, 3, 2 and 1 minute efforts on each machine, 1 min rest after each round.", "Compare each machine and your total with week 1."] }
   ];
+
+
+  // Session week from the phone's local calendar date. cycleStart is the Monday week 2 begins.
+  var DAY_MS = 86400000;
+  function sessionWeek(today, cycleStart) {
+    var p = String(cycleStart).split("-").map(Number);
+    var start = Date.UTC(p[0], p[1] - 1, p[2]);
+    var day = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    var days = Math.round((day - start) / DAY_MS);
+    if (days < 0) return { week: 2, upcoming: true };
+    return { week: 2 + Math.floor(days / 7), upcoming: false };
+  }
+  // A cycle week's session (weeks 2 to 7), or null.
+  function session(week) {
+    var w = PROGRAMME.filter(function (x) { return x.week === week && x.session; })[0];
+    if (!w) return null;
+    var s = w.session;
+    return { week: week, sets: s.sets, pattern: s.pattern, machineRest: s.machineRest, setRest: s.setRest,
+      sections: s.sections.map(function (x) { return { set: x.set, label: x.label, block: x.block }; }) };
+  }
 
   function programme() { return PROGRAMME; }
   // Longest week in minutes, so the programme chart scales to fit.
@@ -260,7 +280,7 @@
     machineOrder: machineOrder, mixSegments: mixSegments, groupOrder: groupOrder, tabOrder: tabOrder, paceRows: paceRows, paceGoals: paceGoals, kick: kick, shares: shares,
     groupMedianShares: groupMedianShares, balance: balance, targets: targets,
     improvement: improvement, improvementRanking: improvementRanking,
-    programme: programme, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,
+    programme: programme, sessionWeek: sessionWeek, session: session, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,
     pctWhole: pctWhole, signed: signed, signedExact: signedExact,
     kickInsight: kickInsight, balanceInsight: balanceInsight
   };
