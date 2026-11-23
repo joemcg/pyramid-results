@@ -211,20 +211,99 @@
 
   // ---------- this week's session ----------
   var nowView = C.sessionWeek(new Date(), D.cycleStart);
+  var RESULTS_URL = globalThis.PYRAMID_RESULTS_URL || D.resultsUrl || null;
+  function canEnter(view) { return !!RESULTS_URL && !view.upcoming; }
+  function lastWeekView(view) { return !view.upcoming && C.session(view.week - 1) ? { week: view.week - 1, upcoming: false, lastWeek: true } : null; }
+
   function sessionBlock(p, view) {
     var ses = C.session(view.week), rows = C.paceRows(p.raw);
     if (!ses || !rows || !rows.length) return "";
     function rng(r) { return r[0] + "–" + r[1]; }
+    var entry = canEnter(view);
     var head = view.upcoming ? "Next session: week " + view.week : "Week " + view.week + (view.lastWeek ? ", last week" : "");
     var sub = ses.sets > 1 ? ses.sets + " sets, " + ses.setRest + " rest between" + (ses.machineRest === "none" ? ", no rest between machines" : ", " + ses.machineRest + " rest between machines")
       : "1 round per machine, " + ses.machineRest;
     var blocks = rows.map(function (r) {
-      var rounds = ses.sets === 1 ? '<ul class="rounds">' + ses.sections.map(function (x) { return "<li>" + esc(x.label) + "</li>"; }).join("") + "</ul>" : "";
+      var rounds = ses.sets === 1 && !entry ? '<ul class="rounds">' + ses.sections.map(function (x) { return "<li>" + esc(x.label) + "</li>"; }).join("") + "</ul>" : "";
+      var inputs = entry ? ses.sections.map(function (x) {
+        var key = x.set + "-" + r.machine, id = "in-" + p.slug + "-" + view.week + "-" + key;
+        return '<div class="en"><label for="' + id + '">' + esc(ses.sets === 1 ? x.label.replace(/, .*$/, "") : x.label) + ", " + x.block + ' total</label>' +
+          '<input id="' + id + '" class="cal" data-key="' + key + '" data-field="calories" inputmode="numeric" autocomplete="off" placeholder="cal">' +
+          '<input class="cm" data-key="' + key + '" data-field="comment" maxlength="280" autocomplete="off" placeholder="Comment (optional)" aria-label="' + esc(x.label) + " comment, " + r.name + '"></div>';
+      }).join("") : "";
       return '<div class="mb ' + r.machine + '" data-machine="' + r.machine + '" data-week="' + view.week + '"><h3>' + r.name + '</h3>' +
         '<div class="rg"><span class="k">Target</span><span class="v">' + rng(r.target) + '</span><span class="u">' + r.unit + "</span></div>" +
-        '<div class="rg rec"><span class="k">Recovery</span><span class="v">' + rng(r.recovery) + '</span><span class="u">' + r.unit + "</span></div>" + rounds + "</div>";
+        '<div class="rg rec"><span class="k">Recovery</span><span class="v">' + rng(r.recovery) + '</span><span class="u">' + r.unit + "</span></div>" + rounds + inputs + "</div>";
     }).join("");
-    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + blocks + "</section>";
+    var save = entry ? '<div class="sv"><button type="button" class="save">Save</button><p class="st" role="status" aria-live="polite"></p></div>' : "";
+    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + blocks + save + "</section>";
+  }
+
+  // Browser storage is a convenience: every call may throw (private browsing) and the card still works.
+  function store(key, value) {
+    try { if (value === undefined) { var v = localStorage.getItem(key); return v == null ? null : JSON.parse(v); } localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
+    return null;
+  }
+  function hhmm(d) { return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes(); }
+
+  // Renders and wires one person's session box; view switches between this week and last week.
+  function mountSession(p, box) {
+    var lw = RESULTS_URL ? lastWeekView(nowView) : null;
+    function render(view) {
+      var card = sessionBlock(p, view);
+      var link = "";
+      if (lw && !view.lastWeek) link = '<button type="button" class="lnk" data-go="last">Log last week\'s session instead</button>';
+      if (view.lastWeek) link = '<button type="button" class="lnk" data-go="now">Back to this week</button>';
+      box.innerHTML = card ? card.replace(/<\/section>$/, link ? '<p class="sw">' + link + "</p></section>" : "</section>") : (link ? '<section class="lcd ses"><p class="sw">' + link + "</p></section>" : "");
+      var go = box.querySelector(".lnk");
+      if (go) go.addEventListener("click", function () { render(go.getAttribute("data-go") === "last" ? lw : nowView); var b = box.querySelector(".lnk"); if (b) b.focus(); });
+      if (card && canEnter(view)) wire(view);
+    }
+    function wire(view) {
+      var draftKey = "pyramid-draft:" + p.slug + ":" + view.week, savedKey = "pyramid-saved:" + p.slug + ":" + view.week;
+      var inputs = Array.prototype.slice.call(box.querySelectorAll("input[data-key]"));
+      var btn = box.querySelector(".save"), st = box.querySelector(".st"), busy = false, memSaved = null;
+      function entries() {
+        var e = {};
+        inputs.forEach(function (i) { var k = i.getAttribute("data-key"); e[k] = e[k] || { calories: "", comment: "" }; e[k][i.getAttribute("data-field")] = i.value; });
+        return e;
+      }
+      function refresh() {
+        var saved = store(savedKey) || memSaved, dirty = !saved || saved.entries !== JSON.stringify(entries());
+        btn.disabled = busy || !dirty;
+        if (!busy && saved && !dirty) st.textContent = "Saved " + saved.time;
+        else if (!busy && saved && dirty) st.textContent = "Changed since you saved at " + saved.time + ".";
+      }
+      var draft = store(draftKey);
+      if (draft) inputs.forEach(function (i) { var d = draft[i.getAttribute("data-key")]; if (d) i.value = d[i.getAttribute("data-field")] || ""; });
+      inputs.forEach(function (i) {
+        i.addEventListener("input", function () { i.classList.remove("bad"); i.removeAttribute("aria-invalid"); store(draftKey, entries()); refresh(); });
+      });
+      btn.addEventListener("click", function () {
+        if (busy) return;
+        var e = entries(), pay = C.buildPayload(p.name, view.week, e);
+        inputs.forEach(function (i) { i.classList.remove("bad"); i.removeAttribute("aria-invalid"); });
+        if (!pay.ok) {
+          inputs.forEach(function (i) { if (i.getAttribute("data-field") === "calories" && pay.bad.indexOf(i.getAttribute("data-key")) >= 0) { i.classList.add("bad"); i.setAttribute("aria-invalid", "true"); } });
+          st.textContent = "Check the marked boxes: whole calories from 1 to 999.";
+          return;
+        }
+        if (!pay.body.rows.length) { st.textContent = "Nothing to save yet. Enter calories for at least one section."; return; }
+        busy = true; btn.disabled = true; st.textContent = "Saving…";
+        var sent = JSON.stringify(e);
+        fetch(RESULTS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(pay.body) })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || res.ok !== true) throw new Error("not saved");
+            memSaved = { time: hhmm(new Date()), entries: sent };
+            store(savedKey, memSaved);
+            busy = false; refresh();
+          })
+          .catch(function () { busy = false; st.textContent = "Not saved. Check your signal and try again."; btn.disabled = false; });
+      });
+      refresh();
+    }
+    render(nowView);
   }
 
   function personPanel(p) {
@@ -234,7 +313,7 @@
     var s = p.s1, k = C.kick(p.raw.tests.week1), bal = C.balance(p.raw.tests.week1, medians);
     var ki = C.kickInsight(k), bi = C.balanceInsight(bal, medians);
     var digits = String(s.total).length, ghost = "888".slice(0, Math.max(3, digits));
-    return sessionBlock(p, nowView) + '<section class="lcd"><div class="top"><div><h2>' + esc(p.name) + '</h2><div class="sub">Week 1 test' + (s.complete ? "" : ", incomplete") + "</div></div>" +
+    return '<div class="sesbox" data-slug="' + p.slug + '"></div>' + '<section class="lcd"><div class="top"><div><h2>' + esc(p.name) + '</h2><div class="sub">Week 1 test' + (s.complete ? "" : ", incomplete") + "</div></div>" +
       '<div class="readout" role="img" aria-label="Total ' + s.total + " calories" + (s.complete ? "" : ", incomplete") + '"><span class="unit">cal</span><span class="ghost" aria-hidden="true">' + ghost + '</span><span class="val">' + s.total + "</span></div></div>" +
       '<div class="rows" role="group" aria-label="Calories by machine and effort">' + pieceRows(s) + "</div>" +
       '<div class="scope">' + paceChart(s) + "</div>" +
@@ -296,6 +375,7 @@
       return '<div role="tabpanel" class="panel" id="panel-' + t.id + '" aria-labelledby="tab-' + t.id + '" tabindex="0" hidden>' + t.html + "</div>";
     }).join("");
 
+  people.forEach(function (p) { var box = root.querySelector('.sesbox[data-slug="' + p.slug + '"]'); if (box) mountSession(p, box); });
   var tabEls = Array.prototype.slice.call(root.querySelectorAll('[role="tab"]'));
   var panelEls = Array.prototype.slice.call(root.querySelectorAll('[role="tabpanel"]'));
   var strip = root.querySelector(".tabs");
