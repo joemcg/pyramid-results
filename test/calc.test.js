@@ -210,3 +210,71 @@ test("pace goal: calories from holding the bottom of the target range for 13 min
   assert.equal(g.total, 615);
   assert.equal(C.paceGoals(person("Matt")), null, "no paces, no goal");
 });
+
+test("sessionWeek follows the phone's local date from the 23 Nov 2026 start", () => {
+  const S = "2026-11-23";
+  assert.deepEqual(C.sessionWeek(new Date(2026, 10, 22, 23, 59), S), { week: 2, upcoming: true });
+  assert.deepEqual(C.sessionWeek(new Date(2026, 10, 23, 0, 1), S), { week: 2, upcoming: false });
+  assert.equal(C.sessionWeek(new Date(2026, 10, 29, 23, 59), S).week, 2);
+  assert.equal(C.sessionWeek(new Date(2026, 10, 30, 0, 0), S).week, 3);
+  assert.equal(C.sessionWeek(new Date(2026, 11, 28), S).week, 7);
+  assert.equal(C.sessionWeek(new Date(2027, 0, 4), S).week, 8);
+});
+
+test("session gives the sections per machine for cycle weeks only", () => {
+  const w2 = C.session(2);
+  assert.equal(w2.sets, 2);
+  assert.equal(w2.pattern, "1:00 target, 1:00 recovery, twice per machine");
+  assert.equal(C.session(4).pattern, "1:30 target, 1:00 recovery, twice per machine");
+  assert.deepEqual(w2.sections.map((s) => [s.set, s.label, s.block]), [[1, "Set 1", "4:00"], [2, "Set 2", "4:00"]]);
+  assert.deepEqual(C.session(4).sections.map((s) => s.block), ["5:00", "5:00"]);
+  const w7 = C.session(7);
+  assert.deepEqual(w7.sections.map((s) => [s.set, s.label, s.block]), [[1, "Round 1, 4:00", "4:30"], [2, "Round 2, 3:00", "3:30"], [3, "Tough minute", "1:00"]]);
+  assert.deepEqual(w7.sections.map((s) => s.piece), ["4:00 target", "3:00 target", "1:00 tough minute"]);
+  assert.equal(w7.machineRest, "1:00 rest after each round");
+  assert.equal(C.session(1), null);
+  assert.equal(C.session(8), null);
+});
+
+test("parseCalories accepts whole numbers 1 to 999 and treats blank as no entry", () => {
+  assert.deepEqual(C.parseCalories(" 45 "), { ok: true, value: 45 });
+  assert.deepEqual(C.parseCalories("045"), { ok: true, value: 45 });
+  assert.deepEqual(C.parseCalories("999"), { ok: true, value: 999 });
+  assert.deepEqual(C.parseCalories(""), { ok: true, value: null });
+  assert.deepEqual(C.parseCalories("   "), { ok: true, value: null });
+  for (const bad of ["0", "1000", "45.5", "4e1", "-3", "abc", "+5"]) assert.equal(C.parseCalories(bad).ok, false, bad);
+});
+
+test("buildPayload keeps filled sections and comment-only sections, trims and caps comments, and rejects any bad value", () => {
+  const good = C.buildPayload("Lindsay", 2, {
+    "1-ski": { calories: "51", comment: " felt good " },
+    "2-ski": { calories: "", comment: "" },
+    "2-row": { calories: "", comment: "comment without calories" },
+  });
+  assert.deepEqual(good, { ok: true, body: { name: "Lindsay", week: 2, rows: [{ set: 1, machine: "ski", calories: 51, comment: "felt good" }, { set: 2, machine: "row", calories: null, comment: "comment without calories" }] } });
+  const long = C.buildPayload("Lindsay", 2, { "1-echo": { calories: "44", comment: "x".repeat(300) } });
+  assert.equal(long.body.rows[0].comment.length, 280);
+  assert.deepEqual(C.buildPayload("Lindsay", 2, { "1-echo": { calories: "44.5", comment: "" }, "1-row": { calories: "60", comment: "" } }), { ok: false, bad: ["1-echo"] });
+});
+
+test("sessionSteps spells out a two-set week in the person's machine order", () => {
+  const T = (time) => ({ kind: "target", time }), R = (time) => ({ kind: "recovery", time });
+  const p2 = [T("1:00"), R("1:00"), T("1:00"), R("1:00")];
+  const m = (machine, parts) => ({ type: "machine", machine, parts });
+  const set = (n) => [{ type: "heading", text: "Set " + n }, m("ski", p2), { type: "rest", time: "1:00" }, m("echo", p2), { type: "rest", time: "1:00" }, m("row", p2)];
+  assert.deepEqual(C.sessionSteps(2, ["ski", "echo", "row"]), [...set(1), { type: "rest", time: "4:00" }, ...set(2)]);
+  const w5 = C.sessionSteps(5, ["echo", "row", "ski"]);
+  assert.deepEqual(w5.slice(0, 4), [{ type: "heading", text: "Set 1" }, m("echo", [T("1:30"), R("1:00"), T("1:00"), R("0:30")]), m("row", [T("1:30"), R("1:00"), T("1:00"), R("0:30")]), m("ski", [T("1:30"), R("1:00"), T("1:00"), R("0:30")])]);
+  assert.deepEqual(w5[4], { type: "rest", time: "5:00" });
+  assert.deepEqual(C.sessionSteps(6, ["echo", "row", "ski"])[1].parts, [T("2:00"), R("0:30"), T("1:00"), R("0:30")]);
+});
+
+test("sessionSteps spells out week 7 round by round", () => {
+  const steps = C.sessionSteps(7, ["row", "ski", "echo"]);
+  assert.deepEqual(steps.filter((s) => s.type === "heading").map((s) => s.text), ["Round 1", "Round 2", "Round 3: tough minute"]);
+  assert.deepEqual(steps[1], { type: "machine", machine: "row", parts: [{ kind: "target", time: "4:00" }, { kind: "recovery", time: "0:30" }] });
+  assert.deepEqual(steps[4], { type: "rest", time: "1:00" });
+  assert.deepEqual(steps[steps.length - 1], { type: "machine", machine: "echo", parts: [{ kind: "tough", time: "1:00" }] });
+  assert.equal(steps.filter((s) => s.type === "rest").length, 2);
+  assert.equal(C.sessionSteps(1, ["row", "ski", "echo"]), null);
+});

@@ -22,6 +22,14 @@
         "design/options"
       ],
       "port": 8765
+    },
+    {
+      "name": "results-stub",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/results-stub.js"
+      ],
+      "port": 8767
     }
   ]
 }

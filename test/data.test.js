@@ -76,3 +76,11 @@ test("roster is the ten people in the group, Joel included", () => {
     ["Anto", "Jay", "Jo", "Joe", "Joel", "Julie", "Lindsay", "Matt", "Rich", "Sanna"]);
   assert.deepEqual(C.testedCount(DATA.people, "week1"), { tested: 9, of: 10 });
 });
+
+test("cycleStart is a real ISO date and resultsUrl is null or an Apps Script URL", () => {
+  assert.match(DATA.cycleStart, /^\d{4}-\d{2}-\d{2}$/);
+  const [y, m, d] = DATA.cycleStart.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  assert.deepEqual([dt.getFullYear(), dt.getMonth() + 1, dt.getDate()], [y, m, d]);
+  assert.ok(DATA.resultsUrl === null || DATA.resultsUrl.startsWith("https://script.google.com/"), String(DATA.resultsUrl));
+});
