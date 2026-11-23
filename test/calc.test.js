@@ -256,3 +256,25 @@ test("buildPayload keeps filled sections and comment-only sections, trims and ca
   assert.equal(long.body.rows[0].comment.length, 280);
   assert.deepEqual(C.buildPayload("Lindsay", 2, { "1-echo": { calories: "44.5", comment: "" }, "1-row": { calories: "60", comment: "" } }), { ok: false, bad: ["1-echo"] });
 });
+
+test("sessionSteps spells out a two-set week in the person's machine order", () => {
+  const T = (time) => ({ kind: "target", time }), R = (time) => ({ kind: "recovery", time });
+  const p2 = [T("1:00"), R("1:00"), T("1:00"), R("1:00")];
+  const m = (machine, parts) => ({ type: "machine", machine, parts });
+  const set = (n) => [{ type: "heading", text: "Set " + n }, m("ski", p2), { type: "rest", time: "1:00" }, m("echo", p2), { type: "rest", time: "1:00" }, m("row", p2)];
+  assert.deepEqual(C.sessionSteps(2, ["ski", "echo", "row"]), [...set(1), { type: "rest", time: "4:00" }, ...set(2)]);
+  const w5 = C.sessionSteps(5, ["echo", "row", "ski"]);
+  assert.deepEqual(w5.slice(0, 4), [{ type: "heading", text: "Set 1" }, m("echo", [T("1:30"), R("1:00"), T("1:00"), R("0:30")]), m("row", [T("1:30"), R("1:00"), T("1:00"), R("0:30")]), m("ski", [T("1:30"), R("1:00"), T("1:00"), R("0:30")])]);
+  assert.deepEqual(w5[4], { type: "rest", time: "5:00" });
+  assert.deepEqual(C.sessionSteps(6, ["echo", "row", "ski"])[1].parts, [T("2:00"), R("0:30"), T("1:00"), R("0:30")]);
+});
+
+test("sessionSteps spells out week 7 round by round", () => {
+  const steps = C.sessionSteps(7, ["row", "ski", "echo"]);
+  assert.deepEqual(steps.filter((s) => s.type === "heading").map((s) => s.text), ["Round 1", "Round 2", "Round 3: tough minute"]);
+  assert.deepEqual(steps[1], { type: "machine", machine: "row", parts: [{ kind: "target", time: "4:00" }, { kind: "recovery", time: "0:30" }] });
+  assert.deepEqual(steps[4], { type: "rest", time: "1:00" });
+  assert.deepEqual(steps[steps.length - 1], { type: "machine", machine: "echo", parts: [{ kind: "tough", time: "1:00" }] });
+  assert.equal(steps.filter((s) => s.type === "rest").length, 2);
+  assert.equal(C.sessionSteps(1, ["row", "ski", "echo"]), null);
+});

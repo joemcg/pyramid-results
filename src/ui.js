@@ -240,10 +240,24 @@
         '<div class="rg"><span class="k">Target</span><span class="v">' + rng(r.target) + '</span><span class="u">' + r.unit + "</span></div>" +
         '<div class="rg rec"><span class="k">Recovery</span><span class="v">' + rng(r.recovery) + '</span><span class="u">' + r.unit + "</span></div>" + pieces + "</div>";
     }).join("");
+    // The whole session step by step, collapsed so the blocks stay the first thing seen.
+    var byMachine = {};
+    rows.forEach(function (r) { byMachine[r.machine] = r; });
+    var steps = C.sessionSteps(view.week, rows.map(function (r) { return r.machine; })).map(function (st) {
+      if (st.type === "heading") return "<h4>" + esc(st.text) + "</h4>";
+      if (st.type === "rest") return '<p class="rest">Rest ' + st.time + "</p>";
+      var r = byMachine[st.machine];
+      return '<div class="stp ' + st.machine + '"><b>' + r.name + "</b><ul>" + st.parts.map(function (pt) {
+        var what = pt.kind === "tough" ? "tough minute" : pt.kind;
+        var pace = pt.kind === "target" ? rng(r.target) + " " + r.unit : pt.kind === "recovery" ? rng(r.recovery) + " " + r.unit : "all out";
+        return '<li class="' + pt.kind + '"><span>' + pt.time + " " + what + "</span><span>" + pace + "</span></li>";
+      }).join("") + "</ul></div>";
+    }).join("");
+    var full = '<details class="full"><summary>Full workout, step by step</summary><div class="steps">' + steps + "</div></details>";
     // Entry sits below all three blocks, so it never pushes the next machine's ranges off screen.
     var log = "";
     if (canEnter(view)) {
-      log = '<div class="log"><h3>Log your results</h3>' + rows.map(function (r) {
+      log = '<details class="log"' + (view.lastWeek ? " open" : "") + '><summary>Log your results<span class="ls"></span></summary>' + rows.map(function (r) {
         return '<div class="lg ' + r.machine + '"><h4>' + r.name + "</h4>" + ses.sections.map(function (x) {
           var key = x.set + "-" + r.machine, id = "in-" + p.slug + "-" + view.week + "-" + key;
           var name = ses.sets === 1 ? x.label.replace(/, .*$/, "") : x.label;
@@ -251,9 +265,9 @@
             '<input id="' + id + '" class="cal" data-key="' + key + '" data-field="calories" inputmode="numeric" autocomplete="off" placeholder="cal">' +
             '<input class="cm" data-key="' + key + '" data-field="comment" maxlength="280" autocomplete="off" placeholder="Comment (optional)" aria-label="' + esc(name) + " comment, " + r.name + '"></div>';
         }).join("") + "</div>";
-      }).join("") + '<div class="sv"><button type="button" class="save">Save</button><p class="st" role="status" aria-live="polite"></p></div></div>';
+      }).join("") + '<div class="sv"><button type="button" class="save">Save</button><p class="st" role="status" aria-live="polite"></p></div></details>';
     }
-    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + blocks + log + "</section>";
+    return '<section class="lcd ses" aria-label="' + esc(head) + '"><h2>' + esc(head) + '</h2><p class="pat">' + esc(ses.pattern) + '</p><p class="foot">' + esc(sub) + ".</p>" + full + blocks + log + "</section>";
   }
 
   // Browser storage is a convenience: every call may throw (private browsing) and the card still works.
@@ -281,6 +295,7 @@
       var draftKey = "pyramid-draft:" + p.slug + ":" + view.week, savedKey = "pyramid-saved:" + p.slug + ":" + view.week;
       var inputs = Array.prototype.slice.call(box.querySelectorAll("input[data-key]"));
       var btn = box.querySelector(".save"), st = box.querySelector(".st"), busy = false, memSaved = null;
+      var logEl = box.querySelector("details.log"), ls = box.querySelector(".ls");
       function entries() {
         var e = {};
         inputs.forEach(function (i) { var k = i.getAttribute("data-key"); e[k] = e[k] || { calories: "", comment: "" }; e[k][i.getAttribute("data-field")] = i.value; });
@@ -291,9 +306,15 @@
         btn.disabled = busy || !dirty;
         if (!busy && saved && !dirty) st.textContent = "Saved " + saved.time;
         else if (!busy && saved && dirty) st.textContent = "Changed since you saved at " + saved.time + ".";
+        var hasEntries = inputs.some(function (i) { return i.value.trim() !== ""; });
+        ls.textContent = saved && !dirty ? "Saved " + saved.time : hasEntries ? "Not saved yet" : "";
       }
       var draft = store(draftKey);
       if (draft) inputs.forEach(function (i) { var d = draft[i.getAttribute("data-key")]; if (d) i.value = d[i.getAttribute("data-field")] || ""; });
+      if (draft && inputs.some(function (i) { return i.value.trim() !== ""; })) {
+        var was = store(savedKey) || memSaved;
+        if (!was || was.entries !== JSON.stringify(entries())) logEl.open = true;
+      }
       inputs.forEach(function (i) {
         i.addEventListener("input", function () { i.classList.remove("bad"); i.removeAttribute("aria-invalid"); store(draftKey, entries()); refresh(); });
       });

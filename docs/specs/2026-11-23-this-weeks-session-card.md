@@ -1,6 +1,6 @@
 # This week's session card on each person's tab
 
-Status: accepted (2026-11-23, revised: full workout section)
+Status: implemented (2026-11-23)
 
 ## Goal
 The group is starting the cycle sessions (weeks 2 to 7). Mid-session, between machines, people need their own target and recovery paces for the next machine without working anything out. Each tested person's tab gets a "this week's session" card they can glance at on their phone: the week's pattern in one line, then one large block per machine with that person's target and recovery ranges.
@@ -19,7 +19,7 @@ The group is starting the cycle sessions (weeks 2 to 7). Mid-session, between ma
 - [x] Given week 7, when a tab opens, then each machine block lists the pieces done on that machine (4:00 target, 3:00 target, 1:00 tough minute) with the target range, whether or not entry is on, and the summary says 3 rounds.
 - [x] Given today's date and the programme start date, when the page loads, or comes back into view on the phone, then the card shows the week that date falls in: 23 to 29 November 2026 is week 2, 30 November is week 3.
 
-- [ ] Given the card, when it opens, then a "Full workout" section is collapsed under the pattern line; when tapped, it lists the session step by step: each set (or round in week 7), each machine in the person's order with every piece's length and that person's target or recovery range, and the rests between machines and sets.
+- [x] Given the card, when it opens, then a "Full workout" section is collapsed under the pattern line; when tapped, it lists the session step by step: each set (or round in week 7), each machine in the person's order with every piece's length and that person's target or recovery range, and the rests between machines and sets.
 
 ## Test plan
 - Unit (`test/calc.test.js`): the current-week function for dates before, on, inside and after each week boundary; the per-machine session rows for week 2 and week 7 from a fixture person.

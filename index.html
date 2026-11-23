@@ -142,8 +142,23 @@
   .rg .u { font-size: .8rem; color: var(--ink2); }
   .rounds { list-style: none; margin: 4px 0 0; padding: 0; font-size: .85rem; color: var(--ink2); }
 
+  .ses summary { min-height: 44px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+  .ses summary::marker { color: var(--ink2); }
+  .ses summary::-webkit-details-marker { color: var(--ink2); }
+  .full { margin: 2px 0 8px; border-top: 1px solid var(--line); }
+  .full summary { font-size: .95rem; }
+  .steps { padding: 0 0 6px; }
+  .steps h4 { margin: 10px 0 4px; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink2); }
+  .stp { padding: 4px 0 4px 10px; box-shadow: inset 4px 0 0 var(--c); margin-bottom: 4px; }
+  .stp b { font-size: .95rem; }
+  .stp ul { list-style: none; margin: 2px 0 0; padding: 0; }
+  .stp li { display: flex; justify-content: space-between; gap: 8px; font-size: .9rem; }
+  .stp li span:last-child { font-family: var(--num); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stp li.recovery { color: var(--ink2); }
+  .rest { font-size: .85rem; color: var(--ink2); margin: 2px 0 6px 10px; }
+  .log summary { font-size: 1.05rem; justify-content: flex-start; }
+  .ls { margin-left: auto; font-size: .85rem; font-weight: 400; color: var(--ink2); }
   .log { border-top: 2px solid var(--ink); margin-top: 8px; padding-top: 10px; }
-  .log h3 { font-size: 1.05rem; font-weight: 600; }
   .lg { margin-top: 8px; padding-left: 10px; box-shadow: inset 4px 0 0 var(--c); }
   .lg h4 { margin: 0; font-size: .95rem; font-weight: 600; }
   .en { display: grid; grid-template-columns: 1fr 84px; gap: 4px 8px; align-items: center; margin-top: 8px; }
