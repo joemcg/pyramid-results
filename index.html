@@ -193,6 +193,23 @@
   .src { display: flex; align-items: center; gap: 8px; color: var(--dim); padding: 4px 4px 0; }
   .src a { color: var(--on-dark); }
 
+  /* session reports */
+  .tr.rs { grid-template-columns: repeat(4, 1fr); margin: 10px 0 2px; }
+  .tr.rs > div { box-shadow: inset 0 -2px 0 var(--ink); }
+  .ko { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: .95rem; }
+  .rc { border-top: 1px solid var(--ink); padding: 10px 0 8px; }
+  .rc:first-of-type { border-top: 0; padding-top: 2px; }
+  .rc h3 { font-size: 1.1rem; font-weight: 600; }
+  .rc .sub { font-size: .85rem; color: var(--ink2); text-align: right; }
+  .rp { display: grid; grid-template-columns: 58px repeat(2, 1fr) 1.3fr 1fr; text-align: right; align-items: center; padding: 3px 4px 3px 8px; border-top: 1px solid var(--line); box-shadow: inset 3px 0 0 var(--c, transparent); font: 600 1.05rem var(--num); font-variant-numeric: tabular-nums; }
+  .rp.hd { border-top: 0; box-shadow: none; font: 400 .75rem "IBM Plex Sans", sans-serif; color: var(--ink2); margin-top: 6px; }
+  .rp .nm { text-align: left; font: 600 .9rem "IBM Plex Sans", sans-serif; }
+  .rp .pl { color: var(--ink2); font-size: .95rem; }
+  .rp .above { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .qt { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; }
+  .qt .chip { margin-right: 4px; }
+  .nt { margin-top: 8px; font-size: .92rem; padding: 6px 8px; background: #B9C6B2; border-radius: 5px; }
+
   @media (prefers-reduced-motion: no-preference) {
     .readout .val { animation: warm .5s ease-out; }
     @keyframes warm { from { opacity: .2; } to { opacity: 1; } }

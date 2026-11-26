@@ -406,8 +406,105 @@
       '<p class="src">' + icon("link") + '<a href="' + SOURCE_URL + '" target="_blank" rel="noopener">Source: Pyramid pace calculator</a></p>';
   }
 
+  // ---------- session reports ----------
+  var STATUS_TEXT = { on: "on plan", above: "over plan", below: "under plan" };
+  function pctLabel(f) { return C.signed(f); }
+  function sessionReports(ses) {
+    return C.tabOrder(D.people).map(function (raw) { return C.sessionReport(raw, ses.week, ses.rows); }).filter(Boolean);
+  }
+
+  // Every logged machine as a row: the plan range as a band, set 1 as a ring, set 2 as a dot, all as % against the plan midpoint.
+  function planChart(reports) {
+    var rows = [];
+    reports.forEach(function (r, gi) {
+      r.machines.forEach(function (m, mi) {
+        if (!m.sets.length || !m.sets[0].plan) return;
+        var mid = m.sets[0].plan.mid;
+        rows.push({ person: mi === 0 ? r.name : "", gap: gi > 0 && mi === 0, m: m, mid: mid,
+          lo: m.sets[0].plan.lo / mid - 1, hi: m.sets[0].plan.hi / mid - 1,
+          pts: m.sets.map(function (x) { return { set: x.set, v: x.calories / x.plan.mid - 1 }; }) });
+      });
+    });
+    if (!rows.length) return "";
+    var all = [];
+    rows.forEach(function (r) { all.push(r.lo, r.hi); r.pts.forEach(function (q) { all.push(q.v); }); });
+    var lo = Math.min(-0.1, Math.floor(Math.min.apply(null, all) * 10) / 10), hi = Math.max(0.2, Math.ceil(Math.max.apply(null, all) * 10) / 10);
+    var W = 340, L = 96, R = 44, T = 30, rh = 17, gap = 8, pw = W - L - R;
+    var H = T + rows.length * rh + rows.filter(function (r) { return r.gap; }).length * gap + 28;
+    function X(v) { return L + (v - lo) / (hi - lo) * pw; }
+    var g = "", body = "", y = T, desc = [];
+    var gridBottom = H - 26;
+    for (var t = Math.round(lo * 10); t <= Math.round(hi * 10); t++) {
+      var x = X(t / 10).toFixed(1);
+      g += '<line x1="' + x + '" x2="' + x + '" y1="' + (T - 4) + '" y2="' + gridBottom + '" class="grid"' + (t === 0 ? ' style="stroke:#8E978C"' : "") + '/>' +
+        '<text x="' + x + '" y="' + (gridBottom + 13) + '" class="ax mid tick">' + (t > 0 ? "+" : "") + t * 10 + "%</text>";
+    }
+    rows.forEach(function (r) {
+      if (r.gap) y += gap;
+      var cy = y + rh / 2;
+      if (r.person) body += '<text x="2" y="' + (cy + 4).toFixed(1) + '" class="val">' + esc(r.person) + "</text>";
+      body += '<text x="' + (L - 8) + '" y="' + (cy + 4).toFixed(1) + '" class="ax end c-' + r.m.machine + '">' + r.m.name + "</text>";
+      body += '<rect x="' + X(r.lo).toFixed(1) + '" y="' + (cy - 6).toFixed(1) + '" width="' + (X(r.hi) - X(r.lo)).toFixed(1) + '" height="12" rx="2" class="pm-rest"/>';
+      var xs = r.pts.map(function (q) { return X(q.v); });
+      if (xs.length > 1) body += '<line x1="' + Math.min.apply(null, xs).toFixed(1) + '" x2="' + Math.max.apply(null, xs).toFixed(1) + '" y1="' + cy.toFixed(1) + '" y2="' + cy.toFixed(1) + '" class="ln s-' + r.m.machine + '" style="stroke-width:2"/>';
+      r.pts.forEach(function (q, i) {
+        body += i === 0 && r.pts.length > 1
+          ? '<circle cx="' + X(q.v).toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="3.6" fill="#1E2124" stroke-width="2" class="s-' + r.m.machine + '"/>'
+          : '<circle cx="' + X(q.v).toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="4" class="f-' + r.m.machine + '"/>';
+      });
+      body += '<text x="' + (W - 2) + '" y="' + (cy + 4).toFixed(1) + '" class="val end c-' + r.m.machine + '">' + pctLabel(r.m.vsPlan) + "</text>";
+      desc.push((r.person || "") + " " + r.m.name + ": " + r.pts.map(function (q) { return "set " + q.set + " " + pctLabel(q.v); }).join(", ") + ", " + STATUS_TEXT[r.m.status]);
+      y += rh;
+    });
+    var legend = '<rect x="2" y="7" width="16" height="10" rx="2" class="pm-rest"/><text x="22" y="16" class="ax">Plan range</text>' +
+      '<circle cx="104" cy="12" r="3.6" fill="#1E2124" stroke="#E8EDE5" stroke-width="2"/><text x="112" y="16" class="ax">Set 1</text>' +
+      '<circle cx="160" cy="12" r="4" fill="#E8EDE5"/><text x="168" y="16" class="ax">Set 2</text>' +
+      '<text x="' + (W - 2) + '" y="16" class="ax end">Average</text>';
+    return '<svg class="chart" style="max-height:none" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Calories per block against the plan midpoint, by person and machine. ' + esc(desc.join(". ")) + '">' +
+      legend + g + body + '<text x="' + (L + pw / 2) + '" y="' + (H - 2) + '" class="ax mid">Against the middle of the plan</text></svg>';
+  }
+
+  function reportCard(r, ses) {
+    var person = D.people.filter(function (p) { return p.name === r.name; })[0];
+    var counts = { on: [], above: [], below: [] };
+    r.machines.forEach(function (m) { if (m.status) counts[m.status].push(m.name); });
+    var head = counts.on.length === r.machines.length ? "On plan on all three"
+      : counts.above.length === r.machines.length ? "Over plan on all three"
+      : ["above", "below", "on"].filter(function (k) { return counts[k].length; }).map(function (k) { return (k === "on" ? "On plan" : k === "above" ? "Over" : "Under") + ": " + counts[k].join(", "); }).join(". ");
+    var rows = '<div class="rp hd"><span></span><span>Set 1</span><span>Set 2</span><span>Plan</span><span>vs plan</span></div>' + r.machines.map(function (m) {
+      var plan = m.sets[0] && m.sets[0].plan;
+      function cell(i) { var x = m.sets[i]; return x ? '<span class="' + (x.status || "") + '">' + x.calories + "</span>" : "<span>–</span>"; }
+      return '<div class="rp ' + m.machine + '"><span class="nm">' + m.name + "</span>" + cell(0) + cell(1) +
+        "<span class=\"pl\">" + (plan ? Math.round(plan.lo) + "–" + Math.round(plan.hi) : "–") + "</span><span>" + (m.vsPlan == null ? "–" : pctLabel(m.vsPlan)) + "</span></div>";
+    }).join("");
+    var quotes = [];
+    r.machines.forEach(function (m) { m.comments.forEach(function (c) { quotes.push("<li>" + chip(m.machine) + " “" + esc(c) + "”</li>"); }); });
+    var note = ses.notes && ses.notes[r.name];
+    return '<article class="rc"><div class="top"><h3><a href="#' + slug(r.name) + '">' + esc(r.name) + '</a></h3><span class="sub">' + esc(head) + "</span></div>" + rows +
+      (quotes.length ? '<ul class="qt">' + quotes.join("") + "</ul>" : "") + (note ? '<p class="nt">' + esc(note) + "</p>" : "") + "</article>";
+  }
+
+  function reportPanel(ses) {
+    var reports = sessionReports(ses), sum = C.sessionSummary(reports);
+    var w = C.programme().filter(function (x) { return x.week === ses.week; })[0];
+    var d = ses.date.split("-").map(Number), when = new Date(d[0], d[1] - 1, d[2]).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    var missing = D.people.filter(function (p) { return !reports.some(function (r) { return r.name === p.name; }); }).map(function (p) { return p.name; });
+    var stats = '<div class="tr rs"><div><span class="v">' + sum.people + '</span><span class="l">logged</span></div>' +
+      '<div><span class="v">' + sum.on + '</span><span class="l">on plan</span></div><div><span class="v">' + sum.above + '</span><span class="l">over plan</span></div>' +
+      '<div><span class="v">' + sum.held + "/" + sum.pairs + '</span><span class="l">set 2 ≥ set 1</span></div></div>';
+    return '<section class="lcd"><h2>Week ' + ses.week + " results</h2><p>" + esc(when) + ". " + esc(w ? w.session.pattern : "") + ', 2 sets.</p>' + stats +
+      '<p class="foot">Each 4-minute block is 2 minutes at target pace and 2 at recovery pace, so each person\'s plan for a block is a calorie range from their own paces. Counts are per machine, ' + sum.machines + " in all." +
+      (missing.length ? " Not logged yet: " + esc(missing.join(", ")) + "." : "") + "</p></section>" +
+      '<section class="lcd"><h2>Against the plan</h2><div class="scope">' + planChart(reports) + '</div><p class="foot">Grey band: the plan range for one block. Right: the average of both sets against the middle of the plan.</p></section>' +
+      (ses.notes && ses.notes.group ? '<section class="lcd"><h2>What stands out</h2><ul class="ko">' + ses.notes.group.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul></section>" : "") +
+      '<section class="lcd"><h2>By person</h2>' + reports.map(function (r) { return reportCard(r, ses); }).join("") + '<p class="foot">Calories per 4-minute block. Plan: the range from 2 minutes at target pace plus 2 at recovery pace.</p></section>';
+  }
+
   // ---------- tabs ----------
   var tabs = [{ id: "group", label: "Group", html: groupPanel() }, { id: "programme", label: "Programme", html: programmePanel() }];
+  (D.sessions || []).slice().sort(function (a, b) { return b.week - a.week; }).forEach(function (ses) {
+    tabs.push({ id: "week-" + ses.week, label: "Week " + ses.week, html: reportPanel(ses) });
+  });
   var byTabName = {};
   people.forEach(function (p) { byTabName[p.name] = p; });
   C.tabOrder(D.people).forEach(function (raw) { var p = byTabName[raw.name]; tabs.push({ id: p.slug, label: p.name, dim: !p.tested, html: personPanel(p) }); });

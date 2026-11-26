@@ -89,3 +89,27 @@ test("cycleStart is a real ISO date and resultsUrl is null or an Apps Script URL
   assert.deepEqual([dt.getFullYear(), dt.getMonth() + 1, dt.getDate()], [y, m, d]);
   assert.ok(DATA.resultsUrl === null || DATA.resultsUrl.startsWith("https://script.google.com/"), String(DATA.resultsUrl));
 });
+
+test("session rows: known names, cycle weeks, valid sets and machines, one row per section", () => {
+  const names = DATA.people.map((p) => p.name);
+  for (const s of DATA.sessions) {
+    const seen = new Set();
+    for (const r of s.rows) {
+      assert.ok(names.includes(r.name), r.name);
+      assert.ok(DATA.machines.includes(r.machine), r.machine);
+      assert.ok(C.session(s.week).sections.some((x) => x.set === r.set), `week ${s.week} set ${r.set}`);
+      const k = `${r.name}-${r.set}-${r.machine}`;
+      assert.ok(!seen.has(k), "duplicate " + k);
+      seen.add(k);
+    }
+    for (const n of Object.keys(s.notes || {})) assert.ok(n === "group" || names.includes(n), "note for " + n);
+  }
+});
+
+test("week 2 sheet of 2026-11-26: four people, Sanna on plan everywhere, 7 machines over plan", () => {
+  const s = DATA.sessions.find((x) => x.week === 2);
+  const reports = DATA.people.map((p) => C.sessionReport(p, 2, s.rows)).filter(Boolean);
+  assert.deepEqual(reports.map((r) => r.name).sort(), ["Joe", "Julie", "Rich", "Sanna"]);
+  assert.deepEqual(reports.find((r) => r.name === "Sanna").machines.map((m) => m.status), ["on", "on", "on"]);
+  assert.deepEqual(C.sessionSummary(reports), { people: 4, on: 5, above: 7, below: 0, machines: 12, held: 10, pairs: 12 });
+});

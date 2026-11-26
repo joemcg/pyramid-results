@@ -275,6 +275,61 @@
     return steps;
   }
 
+  // Planned calories for one section of a cycle week: its target minutes at target pace plus its
+  // recovery minutes at recovery pace, low and high ends. null without paces or for a tough minute (all out).
+  function partMinutes(t) { var p = t.split(":"); return Number(p[0]) + Number(p[1]) / 60; }
+  function sectionPlan(person, week, set, machine) {
+    var w = PROGRAMME.filter(function (x) { return x.week === week && x.session; })[0];
+    var pace = person && person.paces && person.paces[machine];
+    if (!w || !pace) return null;
+    var sec = w.session.sections.filter(function (x) { return x.set === set; })[0];
+    if (!sec) return null;
+    var parts = parseParts(sec.parts || w.session.parts), lo = 0, hi = 0, f = machine === "echo" ? CALHR_PER_WATT : 1;
+    for (var i = 0; i < parts.length; i++) {
+      var pt = parts[i], mins = partMinutes(pt.time);
+      if (pt.kind === "tough") return null;
+      var r = pt.kind === "target" ? pace.target : pace.recovery;
+      lo += mins * r[0]; hi += mins * r[1];
+    }
+    return { lo: lo * f / 60, hi: hi * f / 60, mid: (lo + hi) * f / 120 };
+  }
+  function planStatus(cal, plan) { return cal < plan.lo ? "below" : cal > plan.hi ? "above" : "on"; }
+
+  // One person's logged session against their plan, machines in the order they use them.
+  // rows: [{ name, set, machine, calories, comment }]. vsPlan is the average set against the plan midpoint.
+  function sessionReport(person, week, rows) {
+    var mine = rows.filter(function (r) { return r.name === person.name; });
+    if (!mine.length) return null;
+    var machines = machineOrder(person.tests && person.tests.week1).map(function (m) {
+      var sets = mine.filter(function (r) { return r.machine === m && r.calories != null; })
+        .sort(function (a, b) { return a.set - b.set; })
+        .map(function (r) { var plan = sectionPlan(person, week, r.set, m); return { set: r.set, calories: r.calories, plan: plan, status: plan ? planStatus(r.calories, plan) : null }; });
+      var comments = [];
+      mine.forEach(function (r) { var c = String(r.comment || "").trim(); if (r.machine === m && c && comments.indexOf(c) < 0) comments.push(c); });
+      var planned = sets.filter(function (x) { return x.plan; });
+      var out = { machine: m, name: NAMES[m], sets: sets, comments: comments, vsPlan: null, status: null };
+      if (planned.length) {
+        var cal = sum(planned.map(function (x) { return x.calories; })), lo = sum(planned.map(function (x) { return x.plan.lo; })), hi = sum(planned.map(function (x) { return x.plan.hi; }));
+        out.vsPlan = cal / ((lo + hi) / 2) - 1;
+        out.status = planStatus(cal, { lo: lo, hi: hi });
+      }
+      return out;
+    });
+    return { name: person.name, machines: machines };
+  }
+
+  // Group view of one week: how many machines came in on, above or below plan, and how often set 2 held set 1.
+  function sessionSummary(reports) {
+    var out = { people: reports.length, on: 0, above: 0, below: 0, machines: 0, held: 0, pairs: 0 };
+    reports.forEach(function (r) {
+      r.machines.forEach(function (m) {
+        if (m.status) { out[m.status]++; out.machines++; }
+        if (m.sets.length >= 2) { out.pairs++; if (m.sets[1].calories >= m.sets[0].calories) out.held++; }
+      });
+    });
+    return out;
+  }
+
   function programme() { return PROGRAMME; }
   // Longest week in minutes, so the programme chart scales to fit.
   function programmeScaleMax(rows) {
@@ -331,7 +386,7 @@
     machineOrder: machineOrder, mixSegments: mixSegments, groupOrder: groupOrder, tabOrder: tabOrder, paceRows: paceRows, paceGoals: paceGoals, kick: kick, shares: shares,
     groupMedianShares: groupMedianShares, balance: balance, targets: targets,
     improvement: improvement, improvementRanking: improvementRanking,
-    programme: programme, sessionWeek: sessionWeek, session: session, sessionSteps: sessionSteps, parseCalories: parseCalories, buildPayload: buildPayload, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,
+    programme: programme, sectionPlan: sectionPlan, sessionReport: sessionReport, sessionSummary: sessionSummary, sessionWeek: sessionWeek, session: session, sessionSteps: sessionSteps, parseCalories: parseCalories, buildPayload: buildPayload, programmeMinutes: programmeMinutes, programmeScaleMax: programmeScaleMax, routeFromHash: routeFromHash,
     pctWhole: pctWhole, signed: signed, signedExact: signedExact,
     kickInsight: kickInsight, balanceInsight: balanceInsight
   };
