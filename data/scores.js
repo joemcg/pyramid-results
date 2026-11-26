@@ -20,7 +20,8 @@ globalThis.PYRAMID = {
     // Jo: starting machine recorded as "Ski?" on the sheet; order assumed from the usual Echo, Row, Ski rotation.
     { name: "Jo",    tests: { week1: { date: null, order: ["ski", "echo", "row"], boardTotal: 330, pieces: { echo: [40, 31, 21, 12], row: [50, 37, 24, 12], ski: [41, 30, 21, 11] } }, week8: null }, paces: { echo: { target: [218, 239], recovery: [135, 156] }, row: { target: [775, 849], recovery: [554, 627] }, ski: { target: [649, 711], recovery: [464, 525] } } },
     { name: "Jay",   tests: { week1: { date: null, order: ["echo", "row", "ski"], boardTotal: 462, pieces: { echo: [62, 45, 29, 16], row: [68, 45, 30, 16], ski: [64, 43, 28, 16] } }, week8: null }, paces: { echo: { target: [319, 350], recovery: [198, 228] }, row: { target: [1002, 1097], recovery: [716, 811] }, ski: { target: [951, 1042], recovery: [680, 770] } } },
-    { name: "Joel",    tests: { week1: null, week8: null } },
+    // Joel: machine order not on the board; assumed Echo, Row, Ski (the board's row order).
+    { name: "Joel",    tests: { week1: { date: null, order: ["echo", "row", "ski"], boardTotal: 432, pieces: { echo: [48, 38, 28, 17], row: [65, 46, 30, 15], ski: [57, 43, 28, 17] } }, week8: null }, paces: { echo: { target: [275, 301], recovery: [170, 197] }, row: { target: [983, 1076], recovery: [702, 796] }, ski: { target: [914, 1000], recovery: [653, 740] } } },
     // Lindsay: started on the Ski; rest of the order assumed from the usual Echo, Row, Ski rotation.
     { name: "Lindsay", tests: { week1: { date: null, order: ["ski", "echo", "row"], boardTotal: 388, pieces: { echo: [44, 33, 22, 11], row: [60, 45, 30, 15], ski: [51, 38, 25, 14] } }, week8: null }, paces: { echo: { target: [231, 253], recovery: [143, 165] }, row: { target: [945, 1035], recovery: [675, 765] }, ski: { target: [806, 883], recovery: [576, 653] } } }
   ],
