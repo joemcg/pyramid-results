@@ -278,3 +278,32 @@ test("sessionSteps spells out week 7 round by round", () => {
   assert.equal(steps.filter((s) => s.type === "rest").length, 2);
   assert.equal(C.sessionSteps(1, ["row", "ski", "echo"]), null);
 });
+
+test("sectionPlan: week 2 block is 2 min at target plus 2 min at recovery; Echo watts x3; none for a tough minute", () => {
+  const p = { name: "X", tests: { week1: null }, paces: { echo: { target: [166, 182], recovery: [103, 119] }, row: { target: [706, 773], recovery: [504, 571] } } };
+  const e = C.sectionPlan(p, 2, 1, "echo");
+  assert.equal(e.lo.toFixed(2), ((166 + 103) * 3 / 30).toFixed(2));
+  assert.equal(e.hi.toFixed(2), ((182 + 119) * 3 / 30).toFixed(2));
+  assert.equal(C.sectionPlan(p, 2, 2, "row").lo, (706 + 504) / 30);
+  assert.equal(C.sectionPlan(p, 2, 1, "ski"), null, "no paces for that machine");
+  assert.equal(C.sectionPlan(p, 7, 3, "row"), null, "tough minute has no plan");
+  assert.equal(C.sectionPlan(p, 3, 1, "row").lo, (1.5 * 706 + 1 * 504 + 1 * 706 + 1 * 504) / 60);
+});
+
+test("sessionReport: per machine in the person's order, status from the plan, comments de-duplicated; summary counts", () => {
+  const p = { name: "X", tests: { week1: { order: ["row", "ski", "echo"] } }, paces: { echo: { target: [100, 110], recovery: [60, 70] }, row: { target: [600, 660], recovery: [360, 420] }, ski: { target: [600, 660], recovery: [360, 420] } } };
+  // Plans: echo 16-18, row and ski 32-36 calories per block.
+  const rows = [
+    { name: "X", set: 1, machine: "echo", calories: 17, comment: "" }, { name: "X", set: 2, machine: "echo", calories: 16, comment: "" },
+    { name: "X", set: 1, machine: "row", calories: 40, comment: "easy" }, { name: "X", set: 2, machine: "row", calories: 41, comment: "easy" },
+    { name: "X", set: 1, machine: "ski", calories: 30, comment: "" }, { name: "X", set: 2, machine: "ski", calories: 31, comment: "" },
+    { name: "Y", set: 1, machine: "row", calories: 99, comment: "" }
+  ];
+  const r = C.sessionReport(p, 2, rows);
+  assert.deepEqual(r.machines.map((m) => m.machine), ["row", "ski", "echo"]);
+  assert.deepEqual(r.machines.map((m) => m.status), ["above", "below", "on"]);
+  assert.deepEqual(r.machines[0].comments, ["easy"]);
+  assert.equal(r.machines[0].vsPlan.toFixed(4), (40.5 / 34 - 1).toFixed(4));
+  assert.equal(C.sessionReport({ name: "Z", paces: p.paces }, 2, rows), null);
+  assert.deepEqual(C.sessionSummary([r]), { people: 1, on: 1, above: 1, below: 1, machines: 3, held: 2, pairs: 3 });
+});
