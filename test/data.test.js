@@ -61,7 +61,7 @@ test("every copied pace fits the calculator's pattern (catches copying slips)", 
       }
     }
   }
-  assert.equal(checked, 9 * 3 * 4, "paces present for all 9 tested people");
+  assert.equal(checked, 10 * 3 * 4, "paces present for all 10 tested people");
 });
 
 test("Lindsay's week 1 (2026-11-23): Echo 110, Row 150, Ski 128, started on the Ski", () => {
@@ -71,10 +71,15 @@ test("Lindsay's week 1 (2026-11-23): Echo 110, Row 150, Ski 128, started on the 
   assert.equal(t.order[0], "ski");
 });
 
+test("Joel's week 1: Echo 131, Row 156, Ski 145", () => {
+  const s = C.summarise(DATA.people.find((p) => p.name === "Joel").tests.week1);
+  assert.deepEqual([s.machines.echo.total, s.machines.row.total, s.machines.ski.total, s.total], [131, 156, 145, 432]);
+});
+
 test("roster is the ten people in the group, Joel included", () => {
   assert.deepEqual(DATA.people.map((p) => p.name).sort(),
     ["Anto", "Jay", "Jo", "Joe", "Joel", "Julie", "Lindsay", "Matt", "Rich", "Sanna"]);
-  assert.deepEqual(C.testedCount(DATA.people, "week1"), { tested: 9, of: 10 });
+  assert.deepEqual(C.testedCount(DATA.people, "week1"), { tested: 10, of: 10 });
 });
 
 test("cycleStart is a real ISO date and resultsUrl is null or an Apps Script URL", () => {
