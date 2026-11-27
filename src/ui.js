@@ -492,7 +492,7 @@
     var stats = '<div class="tr rs"><div><span class="v">' + sum.people + '</span><span class="l">logged</span></div>' +
       '<div><span class="v">' + sum.on + '</span><span class="l">on plan</span></div><div><span class="v">' + sum.above + '</span><span class="l">over plan</span></div>' +
       '<div><span class="v">' + sum.held + "/" + sum.pairs + '</span><span class="l">set 2 ≥ set 1</span></div></div>';
-    return '<section class="lcd"><h2>Week ' + ses.week + " results</h2><p>" + esc(when) + ". " + esc(w ? w.session.pattern : "") + ', 2 sets.</p>' + stats +
+    return '<section class="lcd"><h2>Week ' + ses.week + " results</h2><p>Logged up to " + esc(when) + ". " + esc(w ? w.session.pattern : "") + ', 2 sets.</p>' + stats +
       '<p class="foot">Each 4-minute block is 2 minutes at target pace and 2 at recovery pace, so each person\'s plan for a block is a calorie range from their own paces. Counts are per machine, ' + sum.machines + " in all." +
       (missing.length ? " Not logged yet: " + esc(missing.join(", ")) + "." : "") + "</p></section>" +
       '<section class="lcd"><h2>Against the plan</h2><div class="scope">' + planChart(reports) + '</div><p class="foot">Grey band: the plan range for one block. Right: the average of both sets against the middle of the plan.</p></section>' +
