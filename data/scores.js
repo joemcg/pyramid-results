@@ -67,13 +67,12 @@ globalThis.PYRAMID = {
         { name: "Matt", set: 2, machine: "ski", calories: 62, comment: "1000+ target, 800 ish recovery" },
         { name: "Matt", set: 1, machine: "echo", calories: 42, comment: "Felt easy" },
         { name: "Matt", set: 2, machine: "echo", calories: 42, comment: "Felt easy" },
-        // Jo: from a board photo, not the Sheet. Keep these rows when refreshing from the Sheet.
-        { name: "Jo", set: 1, machine: "ski", calories: 45, comment: "", from: "board" },
-        { name: "Jo", set: 2, machine: "ski", calories: 45, comment: "", from: "board" },
-        { name: "Jo", set: 1, machine: "echo", calories: 39, comment: "", from: "board" },
-        { name: "Jo", set: 2, machine: "echo", calories: 38, comment: "", from: "board" },
-        { name: "Jo", set: 1, machine: "row", calories: 57, comment: "", from: "board" },
-        { name: "Jo", set: 2, machine: "row", calories: 57, comment: "", from: "board" }
+        { name: "Jo", set: 1, machine: "ski", calories: 45, comment: "" },
+        { name: "Jo", set: 2, machine: "ski", calories: 45, comment: "" },
+        { name: "Jo", set: 1, machine: "echo", calories: 39, comment: "" },
+        { name: "Jo", set: 2, machine: "echo", calories: 38, comment: "" },
+        { name: "Jo", set: 1, machine: "row", calories: 57, comment: "" },
+        { name: "Jo", set: 2, machine: "row", calories: 57, comment: "" }
       ],
       notes: {
         group: [
