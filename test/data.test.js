@@ -106,10 +106,10 @@ test("session rows: known names, cycle weeks, valid sets and machines, one row p
   }
 });
 
-test("week 2 sheet of 2026-11-26: four people, Sanna on plan everywhere, 7 machines over plan", () => {
+test("week 2 sheet of 2026-11-27: six people, Sanna on plan everywhere, 10 machines over plan", () => {
   const s = DATA.sessions.find((x) => x.week === 2);
   const reports = DATA.people.map((p) => C.sessionReport(p, 2, s.rows)).filter(Boolean);
-  assert.deepEqual(reports.map((r) => r.name).sort(), ["Joe", "Julie", "Rich", "Sanna"]);
+  assert.deepEqual(reports.map((r) => r.name).sort(), ["Jay", "Joe", "Julie", "Matt", "Rich", "Sanna"]);
   assert.deepEqual(reports.find((r) => r.name === "Sanna").machines.map((m) => m.status), ["on", "on", "on"]);
-  assert.deepEqual(C.sessionSummary(reports), { people: 4, on: 5, above: 7, below: 0, machines: 12, held: 10, pairs: 12 });
+  assert.deepEqual(C.sessionSummary(reports), { people: 6, on: 8, above: 10, below: 0, machines: 18, held: 15, pairs: 18 });
 });
