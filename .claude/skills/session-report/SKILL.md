@@ -16,9 +16,11 @@ The page has a "Week N" tab per entry in `sessions` in `data/scores.js`: a summa
 ```bash
 node scripts/sheet-to-session.js <values.json> <week>
 ```
-It prints the `week`, `date` and `rows` to paste into the week's `sessions` entry (replace that entry's rows wholesale; add a new entry for a new week, newest last). It also prints each person against plan, the group summary and who has not logged. A re-save wins over earlier rows for the same section. Look at any "SKIPPED" rows (unknown name, bad machine) and ask Joe rather than guessing; a new person must be added to the roster first.
+It prints the `week`, `date` and `rows` to paste into the week's `sessions` entry (replace that entry's Sheet rows wholesale, but keep any rows marked `from: "board"`: those came from a board photo, not the Sheet, unless the same person has since logged in the Sheet; add a new entry for a new week, newest last). It also prints each person against plan, the group summary and who has not logged. A re-save wins over earlier rows for the same section. Look at any "SKIPPED" rows (unknown name, bad machine) and ask Joe rather than guessing; a new person must be added to the roster first.
 
 The plan for a section is its target minutes at target pace plus its recovery minutes at recovery pace, from the person's own paces (`sectionPlan` in `src/calc.js`). A tough minute (week 7) has no plan and shows no status.
+
+Results sent as a board photo (set 1 and set 2 per machine, B = Echo bike, R = Row, S = Ski) go in as rows with `comment: ""` and `from: "board"`, under a comment naming the source.
 
 ## 3. Write the notes
 `notes` in the entry: `group` (2 to 4 bullets) and one note per person who logged. Rewrite them from the printed analysis each time, keeping notes for people whose numbers did not change unless the new group picture changes them.

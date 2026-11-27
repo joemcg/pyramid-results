@@ -5,6 +5,7 @@
 // paces: Target and Recovery ranges from the official pace calculator. Echo in watts, Row and Ski in cal/hr.
 // cycleStart: the date week 2 starts; later weeks start every 7 days.
 // sessions: cycle-session results copied from the results Sheet, one row per section, plus notes written from them.
+//   Rows with from: "board" came from a board photo instead of the Sheet.
 // overrides: per-person week-8 targets that replace the +5% default, e.g. { Julie: { week8: { row: 140 } } }.
 globalThis.PYRAMID = {
   machines: ["echo", "row", "ski"],
@@ -65,20 +66,28 @@ globalThis.PYRAMID = {
         { name: "Matt", set: 1, machine: "ski", calories: 62, comment: "1000+ target, 800 ish recovery" },
         { name: "Matt", set: 2, machine: "ski", calories: 62, comment: "1000+ target, 800 ish recovery" },
         { name: "Matt", set: 1, machine: "echo", calories: 42, comment: "Felt easy" },
-        { name: "Matt", set: 2, machine: "echo", calories: 42, comment: "Felt easy" }
+        { name: "Matt", set: 2, machine: "echo", calories: 42, comment: "Felt easy" },
+        // Jo: from a board photo, not the Sheet. Keep these rows when refreshing from the Sheet.
+        { name: "Jo", set: 1, machine: "ski", calories: 45, comment: "", from: "board" },
+        { name: "Jo", set: 2, machine: "ski", calories: 45, comment: "", from: "board" },
+        { name: "Jo", set: 1, machine: "echo", calories: 39, comment: "", from: "board" },
+        { name: "Jo", set: 2, machine: "echo", calories: 38, comment: "", from: "board" },
+        { name: "Jo", set: 1, machine: "row", calories: 57, comment: "", from: "board" },
+        { name: "Jo", set: 2, machine: "row", calories: 57, comment: "", from: "board" }
       ],
       notes: {
         group: [
-          "Most machines came in over plan: 10 of 18, with none under. That is fine for week 2, whose job is learning the paces, but the plan gets harder from here: weeks 3 and 4 add target time, and weeks 5 and 6 cut recovery.",
-          "The Ski stands out. It was over plan for 5 of the 6 people who logged, by 11% to 17%; only Sanna was on plan. The Ski paces look the most conservative of the three machines.",
-          "The extra calories mostly come from recovery. Jay and Matt noted the paces they held, and their recovery paces sit well above their recovery ranges; Julie found recovery pace very slow. Keeping recovery slow is part of the session: it keeps target pace honest later in the cycle.",
-          "Nobody faded. Set 2 matched or beat set 1 on 15 of 18 machines, so 4 minutes of rest between sets was enough at these paces."
+          "Most machines came in over plan: 12 of 21, with none under. That is fine for week 2, whose job is learning the paces, but the plan gets harder from here: weeks 3 and 4 add target time, and weeks 5 and 6 cut recovery.",
+          "The Ski stands out. It was over plan for 6 of the 7 people who logged, by 11% to 17%; only Sanna was on plan. The Echo is the opposite: on plan for 5 of 7.",
+          "For Joe, Jo, Julie and Jay, the biggest gap is on the machine they did last in the week 1 test. Tired legs at the end of the test may have set that pace low; the week 8 retest will tell.",
+          "The extra calories mostly come from recovery. Jay and Matt noted the paces they held, and their recovery sits above their recovery ranges; Julie found recovery pace very slow. Keeping recovery slow keeps target pace honest later in the cycle. Nobody faded: set 2 matched or beat set 1 on 17 of 21 machines."
         ],
         Joe: "On plan on the Row, but 14% over on the Ski and 24% over on the Echo, which matches \"paces felt too easy\". The Echo was Joe's last machine in the week 1 test, so its pace may have been set low. Next week: sit at the top of the target range on the Echo and Ski, and keep recovery at recovery pace.",
         Sanna: "On plan on all three machines, with identical sets. Exactly what week 2 is for. Keep the same paces for week 3.",
         Rich: "Echo on plan, as Rich said. Row and Ski were 20% and 11% over: Rich's working paces (1050 to 1120 on the Row, 880 to 920 on the Ski) sit above the target ranges (907 to 994 and 775 to 849). The week 1 Row and Ski may undersell Rich; the week 8 retest will tell.",
         Julie: "Over plan on all three (8% to 19%), at the upper end of both paces. Julie found recovery pace very slow on the Ski and more challenging on the Echo than elsewhere, so the extra calories likely came from the recovery minutes. The Echo is still the most challenging machine, and it was also the furthest over plan. Next week: let recovery be properly easy.",
         Matt: "Row and Echo on plan (+2% and +4%), though Matt found the Echo easy, so there is room to sit at the top of that target range. The Ski was 17% over: Matt worked at 1000+ target and about 800 recovery, against ranges of 876 to 959 and 626 to 709. Recovery is where most of that gap is. Sets were steady.",
+        Jo: "Echo on plan (+3%), with set 2 one calorie under set 1. Row 22% over and Ski 15% over, with identical sets on both. The Row was Jo's last machine in the week 1 test, so its pace may have been set low; the week 8 retest will tell. Next week: sit at the top of the Row and Ski target ranges and keep recovery properly easy.",
         Jay: "Echo exactly on plan, on what Jay called the bad Echo bike. Row and Ski were 8% and 11% over: Jay held 1100 to 1200 target and 850 to 900 recovery on the Row (ranges 1002 to 1097 and 716 to 811), and 1040 to 1080 and 800 to 850 on the Ski (951 to 1042 and 680 to 770). Recovery ran above the top of the range on both, by 30 to 90 cal/hr. Set 2 beat set 1 on every machine."
       }
     }
