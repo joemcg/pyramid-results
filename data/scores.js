@@ -73,13 +73,12 @@ globalThis.PYRAMID = {
         { name: "Jo", set: 2, machine: "echo", calories: 38, comment: "Second round felt more difficult" },
         { name: "Jo", set: 1, machine: "row", calories: 57, comment: "Row felt better than test" },
         { name: "Jo", set: 2, machine: "row", calories: 57, comment: "Second target minute better, need to focus on technique" },
-        // Lindsay: from a board photo, not the Sheet.
-        { name: "Lindsay", set: 1, machine: "ski", calories: 48, comment: "", from: "board" },
-        { name: "Lindsay", set: 2, machine: "ski", calories: 50, comment: "", from: "board" },
-        { name: "Lindsay", set: 1, machine: "echo", calories: 40, comment: "", from: "board" },
-        { name: "Lindsay", set: 2, machine: "echo", calories: 41, comment: "", from: "board" },
-        { name: "Lindsay", set: 1, machine: "row", calories: 56, comment: "", from: "board" },
-        { name: "Lindsay", set: 2, machine: "row", calories: 58, comment: "", from: "board" }
+        { name: "Lindsay", set: 1, machine: "ski", calories: 48, comment: "" },
+        { name: "Lindsay", set: 2, machine: "ski", calories: 50, comment: "" },
+        { name: "Lindsay", set: 1, machine: "echo", calories: 40, comment: "" },
+        { name: "Lindsay", set: 2, machine: "echo", calories: 41, comment: "" },
+        { name: "Lindsay", set: 1, machine: "row", calories: 56, comment: "" },
+        { name: "Lindsay", set: 2, machine: "row", calories: 58, comment: "" }
       ],
       notes: {
         group: [
